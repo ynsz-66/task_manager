@@ -1,0 +1,27 @@
+$kind: http-request
+order: 5160
+method: POST
+url: '{{mcpUrl}}'
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 39,
+      "method": "tools/call",
+      "params": {
+        "name": "update_task",
+        "arguments": {
+          "task_id": "{{taskId2}}",
+          "parent_id": "{{taskId1}}"
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      const text = result.content.map((c) => c.text).join('\n')
+      pm.test('tool call is an error', () => pm.expect(result.isError).to.eql(true))
+      pm.test('error text', () => pm.expect(text).to.include('400 Bad Request: a task cannot be moved under its own subtask'))

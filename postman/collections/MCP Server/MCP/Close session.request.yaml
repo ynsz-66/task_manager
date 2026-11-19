@@ -1,0 +1,10 @@
+$kind: http-request
+order: 9000
+method: DELETE
+url: '{{mcpUrl}}'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 session terminated', () => pm.response.to.have.status(200))
+      pm.collectionVariables.unset('mcpSessionId')

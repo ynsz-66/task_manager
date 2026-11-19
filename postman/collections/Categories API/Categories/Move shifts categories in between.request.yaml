@@ -1,0 +1,14 @@
+$kind: http-request
+order: 5400
+method: GET
+url: '{{baseUrl}}/categories'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('B shifted to n, orders still 0..n+1', () => {
+        const categories = pm.response.json()
+        pm.expect(categories.find((c) => c.id === pm.collectionVariables.get('catBId')).order).to.eql(Number(pm.collectionVariables.get('n')))
+        const orders = categories.slice(0, -1).map((c) => c.order)
+        pm.expect(orders).to.eql(orders.map((_, i) => i))
+      })

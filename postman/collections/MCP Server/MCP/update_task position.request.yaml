@@ -1,0 +1,30 @@
+$kind: http-request
+order: 5050
+method: POST
+url: '{{mcpUrl}}'
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 80,
+      "method": "tools/call",
+      "params": {
+        "name": "update_task",
+        "arguments": {
+          "task_id": "{{taskId1}}",
+          "position": 0
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      const task = result.structuredContent
+      pm.test('moved first among its siblings', () => {
+        pm.expect(result.isError).to.eql(false)
+        pm.expect(task.id).to.eql(pm.collectionVariables.get('taskId1'))
+        pm.expect(task.position).to.eql(0)
+      })

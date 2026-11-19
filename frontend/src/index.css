@@ -1,0 +1,95 @@
+/* Apple-style system look: system font, grouped gray background, white cards, system blue. */
+:root {
+  --bg: #f2f2f7;
+  --panel: #ffffff;
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --accent: #0071e3;
+  --on-accent: #ffffff;
+  --line: rgba(60, 60, 67, 0.16);
+  --fill: rgba(118, 118, 128, 0.12);
+  --danger: #d70015;
+  --shadow: rgba(0, 0, 0, 0.12);
+  --scrim: rgba(0, 0, 0, 0.25);
+  /* Translucent material for floating chrome (header, toast, dialogs). */
+  --material: rgba(242, 242, 247, 0.72);
+  --check-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.6 2.6L12 5.5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  /* Springs sampled as linear() curves (Apple's damping / response, response 0.3 s).
+     --spring: damping 1.0, no overshoot, the default for everything.
+     --spring-bounce: damping 0.8, only after a gesture with momentum (drag release). */
+  --spring: linear(0, 0.06, 0.186, 0.329, 0.466, 0.584, 0.682, 0.76, 0.821, 0.868, 0.903, 0.929, 0.949, 0.963, 0.973, 0.981, 0.986, 0.99, 0.993, 0.995, 0.997, 0.998, 0.998, 0.999, 1);
+  --spring-bounce: linear(0, 0.04, 0.136, 0.26, 0.39, 0.515, 0.627, 0.724, 0.803, 0.866, 0.915, 0.951, 0.976, 0.994, 1.005, 1.011, 1.014, 1.015, 1.015, 1.013, 1.011, 1.009, 1.007, 1.006, 1.004, 1.003, 1.002, 1.001, 1);
+  --spring-t: 0.22s;
+  /* Multiplies every translate/scale/rotate: 0 under reduced motion, so only fades remain. */
+  --motion: 1;
+  /* Color transition on theme change, added to the components' transitions. */
+  --theme-t: background-color 0.2s, color 0.2s, border-color 0.2s;
+
+  /* 100%: follows the user's text size setting; all spacing is in rem. */
+  font: 100%/1.47 var(--sans);
+  letter-spacing: -0.011em;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+[data-theme='dark'] {
+  --bg: #000000;
+  --panel: #1c1c1e;
+  --text: #f5f5f7;
+  --muted: #98989d;
+  --accent: #0a84ff;
+  --line: rgba(84, 84, 88, 0.55);
+  --fill: rgba(118, 118, 128, 0.24);
+  --danger: #ff453a;
+  --shadow: rgba(0, 0, 0, 0.6);
+  --scrim: rgba(0, 0, 0, 0.5);
+  --material: rgba(0, 0, 0, 0.72);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  transition: var(--theme-t);
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+/* Reduced motion keeps the feedback, as fades: no movement, no overshoot, no loops. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion: 0;
+    --spring-bounce: var(--spring);
+  }
+}
+
+/* Reduced transparency: materials become solid. */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --material: var(--bg);
+  }
+}
+
+/* Increased contrast: darker secondary text and visible separators. */
+@media (prefers-contrast: more) {
+  :root {
+    --muted: #3a3a3c;
+    --line: rgba(60, 60, 67, 0.5);
+  }
+
+  [data-theme='dark'] {
+    --muted: #d1d1d6;
+    --line: rgba(235, 235, 245, 0.5);
+  }
+}

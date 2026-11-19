@@ -1,0 +1,19 @@
+$kind: http-request
+order: 5800
+method: PATCH
+url: '{{baseUrl}}/categories/{{catAId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {}
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('400 nothing to update', () => {
+        pm.response.to.have.status(400)
+        pm.expect(pm.response.json().error).to.eql('nothing to update (name, order)')
+      })

@@ -1,0 +1,19 @@
+$kind: http-request
+order: 7650
+method: PATCH
+url: '{{baseUrl}}/tasks/{{subGrandchildId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "parent": null, "category": "{{tempCategoryId}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 now a root task', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().parent).to.eql(null)
+      })

@@ -1,0 +1,19 @@
+$kind: http-request
+order: 7400
+method: PATCH
+url: '{{baseUrl}}/tasks/{{subParentId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "category": "{{otherCategoryId}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 parent moved', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().category).to.eql(pm.collectionVariables.get('otherCategoryId'))
+      })

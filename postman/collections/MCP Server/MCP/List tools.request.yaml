@@ -1,0 +1,36 @@
+$kind: http-request
+order: 1200
+method: POST
+url: '{{mcpUrl}}'
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 900,
+      "method": "tools/list"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const tools = JSON.parse(pm.variables.get('rpc')).result.tools
+      const byName = Object.fromEntries(tools.map((t) => [t.name, t]))
+      const expected = {
+        get_tasks: [], create_task: ['title'], update_task: ['task_id'], delete_task: ['task_id'],
+        get_categories: [], update_category: ['category_id'],
+        get_category_task: ['category_id'], delete_category_task: ['category_id'],
+      }
+      pm.test('exactly the 8 tools', () => pm.expect(Object.keys(byName)).to.have.members(Object.keys(expected)))
+      Object.entries(expected).forEach(([name, required]) => {
+        pm.test(`${name} input schema`, () => {
+          const schema = byName[name].inputSchema
+          pm.expect(schema.type).to.eql('object')
+          pm.expect(schema.required || []).to.have.members(required)
+        })
+      })
+      pm.test('optional params', () => {
+        pm.expect(byName.create_task.inputSchema.properties.category.default).to.eql('Other')
+        pm.expect(byName.update_task.inputSchema.properties).to.have.all.keys('task_id', 'title', 'category', 'done', 'parent_id', 'position')
+        pm.expect(byName.update_category.inputSchema.properties).to.have.all.keys('category_id', 'name', 'order')
+      })

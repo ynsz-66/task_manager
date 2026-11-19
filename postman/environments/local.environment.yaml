@@ -1,0 +1,7 @@
+name: local
+values:
+  - key: apiToken
+    value: ''
+    enabled: true
+    type: secret
+    description: Injected by scripts/test-api.sh from backend/.env

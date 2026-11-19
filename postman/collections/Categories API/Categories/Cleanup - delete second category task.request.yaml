@@ -1,0 +1,9 @@
+$kind: http-request
+order: 9400
+method: DELETE
+url: '{{baseUrl}}/tasks/{{otherCatTaskId}}'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('204 deleted', () => pm.response.to.have.status(204))

@@ -1,0 +1,19 @@
+$kind: http-request
+order: 7300
+method: PATCH
+url: '{{baseUrl}}/tasks/{{subChildId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "category": "{{otherCategoryId}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('400 subtask follows its parent', () => {
+        pm.response.to.have.status(400)
+        pm.expect(pm.response.json().error).to.eql('a subtask follows its parent\'s category: send parent: null to detach it')
+      })

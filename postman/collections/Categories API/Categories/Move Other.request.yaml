@@ -1,0 +1,19 @@
+$kind: http-request
+order: 6100
+method: PATCH
+url: '{{baseUrl}}/categories/{{otherId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "order": {{otherMoveOrder}} }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('400 Other cannot be moved', () => {
+        pm.response.to.have.status(400)
+        pm.expect(pm.response.json().error).to.eql('Other cannot be moved')
+      })

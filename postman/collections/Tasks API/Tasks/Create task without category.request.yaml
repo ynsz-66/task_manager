@@ -1,0 +1,24 @@
+$kind: http-request
+order: 3000
+method: POST
+url: '{{baseUrl}}/tasks'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "title": "  Postman task  " }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 created in Other, trimmed, not done', () => {
+        pm.response.to.have.status(200)
+        const t = pm.response.json()
+        pm.expect(t.id).to.be.a('string')
+        pm.expect(t.title).to.eql('Postman task')
+        pm.expect(t.done).to.eql(false)
+        pm.expect(t.category).to.eql(pm.collectionVariables.get('otherCategoryId'))
+      })
+      pm.collectionVariables.set('taskId', pm.response.json().id)

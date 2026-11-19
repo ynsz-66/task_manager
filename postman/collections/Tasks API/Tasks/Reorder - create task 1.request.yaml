@@ -1,0 +1,22 @@
+$kind: http-request
+order: 7900
+method: POST
+url: '{{baseUrl}}/tasks'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "title": "Postman reorder 1", "category": "{{tempCategoryId}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 with a position', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().position).to.be.a('number')
+      })
+      
+      pm.collectionVariables.set('reorderId1', pm.response.json().id)
+      pm.collectionVariables.set('reorderPos1', pm.response.json().position)

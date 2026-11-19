@@ -1,0 +1,14 @@
+$kind: http-request
+order: 7750
+method: GET
+url: '{{baseUrl}}/tasks'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('subtree deleted, detached task kept', () => {
+        const ids = pm.response.json().map((t) => t.id)
+        pm.expect(ids).to.not.include(pm.collectionVariables.get('subParentId'))
+        pm.expect(ids).to.not.include(pm.collectionVariables.get('subChildId'))
+        pm.expect(ids).to.include(pm.collectionVariables.get('subGrandchildId'))
+      })

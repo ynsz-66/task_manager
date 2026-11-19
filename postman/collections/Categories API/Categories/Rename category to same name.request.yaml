@@ -1,0 +1,19 @@
+$kind: http-request
+order: 5100
+method: PATCH
+url: '{{baseUrl}}/categories/{{catAId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "name": "pmR{{suffix}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 no-op', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().name).to.eql('pmR' + pm.collectionVariables.get('suffix'))
+      })

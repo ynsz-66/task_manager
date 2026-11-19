@@ -1,0 +1,19 @@
+$kind: http-request
+order: 4800
+method: PATCH
+url: '{{baseUrl}}/tasks/{{taskId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "position": -1 }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('400 position must be a non-negative integer', () => {
+        pm.response.to.have.status(400)
+        pm.expect(pm.response.json().error).to.eql('position must be a non-negative integer')
+      })

@@ -1,0 +1,20 @@
+$kind: http-request
+order: 6940
+method: GET
+url: '{{baseUrl}}/categories/{{catAId}}/tasks'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 only the category not-done tasks', () => {
+        pm.response.to.have.status(200)
+        const tasks = pm.response.json().tasks
+        const ids = tasks.map((t) => t.id)
+        pm.expect(ids).to.eql([pm.collectionVariables.get('listTaskId')])
+        pm.expect(ids).to.not.include(pm.collectionVariables.get('doneTaskId'))
+        pm.expect(ids).to.not.include(pm.collectionVariables.get('otherCatTaskId'))
+        tasks.forEach((t) => {
+          pm.expect(t.category).to.eql(pm.collectionVariables.get('catAId'))
+          pm.expect(t.done).to.eql(false)
+        })
+      })

@@ -1,0 +1,26 @@
+$kind: collection
+order: 2000
+description: Raw JSON-RPC over the MCP streamable HTTP transport.
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{mcpToken}}'
+scripts:
+  - type: http:beforeRequest
+    language: text/javascript
+    code: |-
+      pm.request.headers.upsert({ key: 'Accept', value: 'application/json, text/event-stream' })
+      pm.request.headers.upsert({ key: 'Content-Type', value: 'application/json' })
+      const session = pm.collectionVariables.get('mcpSessionId')
+      if (session) pm.request.headers.upsert({ key: 'mcp-session-id', value: session })
+  - type: http:afterResponse
+    language: text/javascript
+    code: |-
+      // The reply is either plain JSON or an SSE stream whose data: lines carry the JSON-RPC message.
+      const raw = pm.response.text()
+      const data = raw.split(/\r?\n/).filter((l) => l.startsWith('data:')).map((l) => l.slice(5)).join('\n')
+      pm.variables.set('rpc', raw ? (data || raw) : '')
+      if (raw && pm.response.code === 200) {
+        pm.test('JSON-RPC 2.0 response', () => pm.expect(JSON.parse(data || raw).jsonrpc).to.eql('2.0'))
+      }

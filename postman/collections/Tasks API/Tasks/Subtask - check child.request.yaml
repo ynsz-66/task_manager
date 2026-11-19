@@ -1,0 +1,19 @@
+$kind: http-request
+order: 7500
+method: PATCH
+url: '{{baseUrl}}/tasks/{{subChildId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "done": true }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 subtask checked', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().done).to.eql(true)
+      })

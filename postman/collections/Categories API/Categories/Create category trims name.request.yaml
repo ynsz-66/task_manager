@@ -1,0 +1,22 @@
+$kind: http-request
+order: 3000
+method: POST
+url: '{{baseUrl}}/categories'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "name": "  pmA{{suffix}}  " }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 appended at n with trimmed name', () => {
+        pm.response.to.have.status(200)
+        const c = pm.response.json()
+        pm.expect(c.name).to.eql('pmA' + pm.collectionVariables.get('suffix'))
+        pm.expect(c.order).to.eql(Number(pm.collectionVariables.get('n')))
+      })
+      pm.collectionVariables.set('catAId', pm.response.json().id)

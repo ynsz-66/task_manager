@@ -1,0 +1,12 @@
+$kind: http-request
+order: 7100
+method: DELETE
+url: '{{baseUrl}}/categories/{{catBId}}'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('204 with empty body', () => {
+        pm.response.to.have.status(204)
+        pm.expect(pm.response.text()).to.be.empty
+      })

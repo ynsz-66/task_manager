@@ -1,0 +1,22 @@
+$kind: http-request
+order: 5000
+method: PATCH
+url: '{{baseUrl}}/categories/{{catAId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "name": "  pmR{{suffix}} " }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 renamed (trimmed), order unchanged', () => {
+        pm.response.to.have.status(200)
+        const c = pm.response.json()
+        pm.expect(c.id).to.eql(pm.collectionVariables.get('catAId'))
+        pm.expect(c.name).to.eql('pmR' + pm.collectionVariables.get('suffix'))
+        pm.expect(c.order).to.eql(Number(pm.collectionVariables.get('n')))
+      })

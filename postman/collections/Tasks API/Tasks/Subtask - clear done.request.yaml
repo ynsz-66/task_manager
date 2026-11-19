@@ -1,0 +1,9 @@
+$kind: http-request
+order: 7550
+method: DELETE
+url: '{{baseUrl}}/tasks?done=true'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200', () => pm.response.to.have.status(200))

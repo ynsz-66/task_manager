@@ -1,0 +1,12 @@
+$kind: http-request
+order: 3150
+method: GET
+url: '{{baseUrl}}/tasks'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('created tasks are listed', () => {
+        const ids = pm.response.json().map((t) => t.id)
+        pm.expect(ids).to.include.members([pm.collectionVariables.get('taskId'), pm.collectionVariables.get('taskId2')])
+      })

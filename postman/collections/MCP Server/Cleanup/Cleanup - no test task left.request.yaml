@@ -1,0 +1,12 @@
+$kind: http-request
+order: 4000
+method: GET
+url: '{{baseUrl}}/tasks'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const suffix = pm.collectionVariables.get('suffix')
+      pm.test('no task of this run left', () => {
+        pm.expect(pm.response.json().filter((t) => t.title.endsWith(suffix))).to.be.empty
+      })

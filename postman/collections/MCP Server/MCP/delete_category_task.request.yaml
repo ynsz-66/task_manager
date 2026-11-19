@@ -1,0 +1,27 @@
+$kind: http-request
+order: 8500
+method: POST
+url: '{{mcpUrl}}'
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 33,
+      "method": "tools/call",
+      "params": {
+        "name": "delete_category_task",
+        "arguments": {
+          "category_id": "{{catBId}}"
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      pm.test('the 2 not-done tasks deleted', () => {
+        pm.expect(result.isError).to.eql(false)
+        pm.expect(result.structuredContent).to.eql({ deletedCount: 2 })
+      })

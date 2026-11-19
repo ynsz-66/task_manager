@@ -1,0 +1,14 @@
+$kind: http-request
+order: 7630
+method: GET
+url: '{{baseUrl}}/tasks'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('every subtask is checked', () => {
+        const tasks = pm.response.json()
+        for (const id of [pm.collectionVariables.get('subChildId'), pm.collectionVariables.get('subGrandchildId')]) {
+          pm.expect(tasks.find((t) => t.id === id).done).to.eql(true)
+        }
+      })

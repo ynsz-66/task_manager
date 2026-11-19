@@ -1,0 +1,17 @@
+$kind: http-request
+order: 6920
+method: POST
+url: '{{baseUrl}}/tasks'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "title": "pm list {{suffix}}", "category": "{{catAId}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 task created', () => pm.response.to.have.status(200))
+      pm.collectionVariables.set('listTaskId', pm.response.json().id)

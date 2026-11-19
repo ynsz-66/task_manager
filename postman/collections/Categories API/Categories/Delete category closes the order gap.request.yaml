@@ -1,0 +1,15 @@
+$kind: http-request
+order: 7300
+method: GET
+url: '{{baseUrl}}/categories'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('B gone, A back at n, orders 0..n', () => {
+        const categories = pm.response.json()
+        pm.expect(categories.find((c) => c.id === pm.collectionVariables.get('catBId'))).to.be.undefined
+        pm.expect(categories.find((c) => c.id === pm.collectionVariables.get('catAId')).order).to.eql(Number(pm.collectionVariables.get('n')))
+        const orders = categories.slice(0, -1).map((c) => c.order)
+        pm.expect(orders).to.eql(orders.map((_, i) => i))
+      })

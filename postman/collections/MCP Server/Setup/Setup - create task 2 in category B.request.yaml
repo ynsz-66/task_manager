@@ -1,0 +1,17 @@
+$kind: http-request
+order: 3100
+method: POST
+url: '{{baseUrl}}/tasks'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "title": "mcp-cat-task2-{{suffix}}", "category": "{{catBId}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 task created', () => pm.response.to.have.status(200))
+      pm.collectionVariables.set('catTaskId2', pm.response.json().id)

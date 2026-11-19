@@ -1,0 +1,26 @@
+$kind: http-request
+order: 8520
+method: POST
+url: '{{mcpUrl}}'
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 35,
+      "method": "tools/call",
+      "params": {
+        "name": "delete_category_task",
+        "arguments": {
+          "category_id": "{{unknownId}}"
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      const text = result.content.map((c) => c.text).join('\n')
+      pm.test('tool call is an error', () => pm.expect(result.isError).to.eql(true))
+      pm.test('error text', () => pm.expect(text).to.include('404 Not Found: category not found'))

@@ -1,0 +1,9 @@
+$kind: http-request
+order: 9000
+method: DELETE
+url: '{{baseUrl}}/categories/{{tempCategoryId}}'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('204 temp category deleted', () => pm.response.to.have.status(204))

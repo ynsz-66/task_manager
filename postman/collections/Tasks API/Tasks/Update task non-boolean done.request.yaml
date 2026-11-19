@@ -1,0 +1,19 @@
+$kind: http-request
+order: 4400
+method: PATCH
+url: '{{baseUrl}}/tasks/{{taskId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "done": "yes" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('400 done must be a boolean', () => {
+        pm.response.to.have.status(400)
+        pm.expect(pm.response.json().error).to.eql('done must be a boolean')
+      })

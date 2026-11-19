@@ -1,0 +1,29 @@
+$kind: http-request
+order: 6100
+method: POST
+url: '{{mcpUrl}}'
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 15,
+      "method": "tools/call",
+      "params": {
+        "name": "update_category",
+        "arguments": {
+          "category_id": "{{catAId}}",
+          "order": {{orderB}}
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      pm.test('category moved to B\'s slot', () => {
+        pm.expect(result.isError).to.eql(false)
+        pm.expect(result.structuredContent.id).to.eql(pm.collectionVariables.get('catAId'))
+        pm.expect(result.structuredContent.order).to.eql(Number(pm.collectionVariables.get('orderB')))
+      })

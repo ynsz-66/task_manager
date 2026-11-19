@@ -1,0 +1,19 @@
+$kind: http-request
+order: 7950
+method: PATCH
+url: '{{baseUrl}}/tasks/{{reorderId1}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "position": 999 }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 clamped to the last index', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().position).to.eql(2)
+      })

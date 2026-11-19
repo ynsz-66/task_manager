@@ -1,0 +1,19 @@
+$kind: http-request
+order: 4600
+method: PATCH
+url: '{{baseUrl}}/tasks/{{unknownId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "done": true }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('404 task not found', () => {
+        pm.response.to.have.status(404)
+        pm.expect(pm.response.json().error).to.eql('task not found')
+      })

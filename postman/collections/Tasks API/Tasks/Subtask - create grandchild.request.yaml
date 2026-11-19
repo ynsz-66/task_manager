@@ -1,0 +1,20 @@
+$kind: http-request
+order: 7150
+method: POST
+url: '{{baseUrl}}/tasks'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "title": "Postman grandchild", "parent": "{{subChildId}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 nested subtask', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().parent).to.eql(pm.collectionVariables.get('subChildId'))
+      })
+      pm.collectionVariables.set('subGrandchildId', pm.response.json().id)

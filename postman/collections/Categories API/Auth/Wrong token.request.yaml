@@ -1,0 +1,18 @@
+$kind: http-request
+order: 1500
+method: GET
+url: '{{baseUrl}}/categories'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      // A bearer token is present but wrong: the middleware must compare it, not just check it exists.
+      pm.test('401 unauthorized', () => {
+        pm.response.to.have.status(401)
+        pm.expect(pm.response.json()).to.eql({ error: 'unauthorized' })
+      })
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: 'not-the-api-token'

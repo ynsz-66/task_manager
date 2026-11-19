@@ -1,0 +1,14 @@
+$kind: http-request
+order: 1000
+method: GET
+url: '{{baseUrl}}/tasks'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('401 unauthorized', () => {
+        pm.response.to.have.status(401)
+        pm.expect(pm.response.json()).to.eql({ error: 'unauthorized' })
+      })
+auth:
+  type: noauth

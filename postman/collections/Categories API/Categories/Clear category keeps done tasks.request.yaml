@@ -1,0 +1,13 @@
+$kind: http-request
+order: 6700
+method: GET
+url: '{{baseUrl}}/tasks'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('not-done task gone, done task kept', () => {
+        const ids = pm.response.json().map((t) => t.id)
+        pm.expect(ids).to.not.include(pm.collectionVariables.get('clearTaskId'))
+        pm.expect(ids).to.include(pm.collectionVariables.get('doneTaskId'))
+      })

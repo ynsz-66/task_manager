@@ -1,0 +1,11 @@
+$kind: http-request
+order: 1000
+method: GET
+url: '{{baseUrl}}/categories'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const other = pm.response.json().find((c) => c.name === 'Other')
+      pm.test('Other category exists', () => pm.expect(other).to.be.an('object'))
+      pm.collectionVariables.set('otherCategoryId', other.id)

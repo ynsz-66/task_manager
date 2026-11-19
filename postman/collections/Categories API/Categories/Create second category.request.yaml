@@ -1,0 +1,20 @@
+$kind: http-request
+order: 3100
+method: POST
+url: '{{baseUrl}}/categories'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "name": "pmB{{suffix}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 appended at n+1', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().order).to.eql(Number(pm.collectionVariables.get('orderLast')))
+      })
+      pm.collectionVariables.set('catBId', pm.response.json().id)

@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Runs the tests matching what the pushed commits change. Skip with: git push --no-verify
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+ZERO="0000000000000000000000000000000000000000"
+
+changed=""
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$ZERO" ] && continue  # branch deletion: nothing to test
+  if [ "$remote_sha" = "$ZERO" ]; then
+    # New branch: diff against where it forked from origin/main.
+    base="$(git merge-base origin/main "$local_sha" 2>/dev/null || true)"
+    if [ -n "$base" ]; then
+      changed+="$(git diff --name-only "$base" "$local_sha")"$'\n'
+    else
+      changed+="$(git ls-tree -r --name-only "$local_sha")"$'\n'
+    fi
+  else
+    changed+="$(git diff --name-only "$remote_sha" "$local_sha")"$'\n'
+  fi
+done
+
+fail() {
+  echo "pre-push: $1 failed, push blocked (bypass with git push --no-verify)" >&2
+  exit 1
+}
+
+if grep -qE '^(backend|postman|mcp)/' <<<"$changed"; then
+  echo "pre-push: backend/postman/mcp changed, running scripts/test-api.sh"
+  "$ROOT/scripts/test-api.sh" || fail "scripts/test-api.sh"
+fi
+
+if grep -q '^frontend/' <<<"$changed"; then
+  if grep -q '"test"' "$ROOT/frontend/package.json"; then
+    echo "pre-push: frontend changed, running npm --prefix frontend test"
+    npm --prefix "$ROOT/frontend" test || fail "frontend tests"
+  else
+    echo "pre-push: warning, frontend changed but frontend/package.json has no test script, skipped" >&2
+  fi
+fi

@@ -1,0 +1,12 @@
+$kind: http-request
+order: 7600
+method: GET
+url: '{{baseUrl}}/tasks'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('checked subtask under a not-done parent is kept', () => {
+        const ids = pm.response.json().map((t) => t.id)
+        pm.expect(ids).to.include.members([pm.collectionVariables.get('subParentId'), pm.collectionVariables.get('subChildId'), pm.collectionVariables.get('subGrandchildId')])
+      })

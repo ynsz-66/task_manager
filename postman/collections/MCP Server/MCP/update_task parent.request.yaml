@@ -1,0 +1,30 @@
+$kind: http-request
+order: 5150
+method: POST
+url: '{{mcpUrl}}'
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 38,
+      "method": "tools/call",
+      "params": {
+        "name": "update_task",
+        "arguments": {
+          "task_id": "{{taskId1}}",
+          "parent_id": "{{taskId2}}"
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      const task = result.structuredContent
+      pm.test('task 1 moved under task 2, in its category', () => {
+        pm.expect(result.isError).to.eql(false)
+        pm.expect(task.parent).to.eql(pm.collectionVariables.get('taskId2'))
+        pm.expect(task.category).to.eql(pm.collectionVariables.get('catBId'))
+      })

@@ -1,0 +1,10 @@
+[project]
+name = "task-manager-mcp"
+version = "0.1.0"
+description = "MCP server exposing task manager tools over the Express API"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28.1",
+    "mcp[cli]<2",
+    "python-dotenv>=1.2.3",
+]

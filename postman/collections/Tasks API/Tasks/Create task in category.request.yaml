@@ -1,0 +1,20 @@
+$kind: http-request
+order: 3100
+method: POST
+url: '{{baseUrl}}/tasks'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "title": "Postman task 2", "category": "{{tempCategoryId}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 created in the given category', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().category).to.eql(pm.collectionVariables.get('tempCategoryId'))
+      })
+      pm.collectionVariables.set('taskId2', pm.response.json().id)

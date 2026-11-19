@@ -1,0 +1,9 @@
+$kind: http-request
+order: 7973
+method: DELETE
+url: '{{baseUrl}}/tasks/{{reorderId3}}'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('204', () => pm.response.to.have.status(204))

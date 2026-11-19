@@ -1,0 +1,24 @@
+$kind: collection
+name: Categories API
+description: Tests for the /api/categories routes. Creates its own categories and cleans them up.
+variables:
+  - key: baseUrl
+    value: 'http://localhost:3000/api'
+  - key: unknownId
+    value: '000000000000000000000000'
+    description: Valid ObjectId that matches no document
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{apiToken}}'
+scripts:
+  - type: http:afterResponse
+    language: text/javascript
+    code: |-
+      // Every error response must carry a JSON { error: string }.
+      if (pm.response.code >= 400) {
+        pm.test('error body has an error message', () => {
+          pm.expect(pm.response.json().error).to.be.a('string').and.not.empty
+        })
+      }

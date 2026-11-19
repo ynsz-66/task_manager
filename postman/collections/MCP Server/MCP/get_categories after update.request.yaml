@@ -1,0 +1,31 @@
+$kind: http-request
+order: 6200
+method: POST
+url: '{{mcpUrl}}'
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 16,
+      "method": "tools/call",
+      "params": {
+        "name": "get_categories",
+        "arguments": {}
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      const text = result.content.map((c) => c.text).join('\n')
+      const categories = result.structuredContent.result
+      const catA = categories.find((c) => c.id === pm.collectionVariables.get('catAId'))
+      const catB = categories.find((c) => c.id === pm.collectionVariables.get('catBId'))
+      const orderB = Number(pm.collectionVariables.get('orderB'))
+      pm.test('A renamed and moved to B\'s slot, B shifted back', () => {
+        pm.expect(catA.name).to.eql(`mcpR-${pm.collectionVariables.get('suffix')}`)
+        pm.expect(catA.order).to.eql(orderB)
+        pm.expect(catB.order).to.eql(orderB - 1)
+      })

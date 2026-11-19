@@ -1,0 +1,34 @@
+$kind: http-request
+order: 2000
+method: POST
+url: '{{mcpUrl}}'
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "method": "tools/call",
+      "params": {
+        "name": "get_categories",
+        "arguments": {}
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      const text = result.content.map((c) => c.text).join('\n')
+      const categories = result.structuredContent.result
+      const names = categories.map((c) => c.name)
+      pm.test('isError false', () => pm.expect(result.isError).to.eql(false))
+      pm.test('Other is last, temp categories listed', () => {
+        pm.expect(names[names.length - 1]).to.eql('Other')
+        pm.expect(names).to.include.members([`mcpA-${pm.collectionVariables.get('suffix')}`, `mcpB-${pm.collectionVariables.get('suffix')}`])
+      })
+      const other = categories.find((c) => c.name === 'Other')
+      const catB = categories.find((c) => c.id === pm.collectionVariables.get('catBId'))
+      pm.collectionVariables.set('otherCategoryId', other.id)
+      pm.collectionVariables.set('orderB', catB.order)
+      pm.collectionVariables.set('categoryCount', categories.length - 1)

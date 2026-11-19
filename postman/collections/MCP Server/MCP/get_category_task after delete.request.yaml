@@ -1,0 +1,28 @@
+$kind: http-request
+order: 8600
+method: POST
+url: '{{mcpUrl}}'
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 36,
+      "method": "tools/call",
+      "params": {
+        "name": "get_category_task",
+        "arguments": {
+          "category_id": "{{catBId}}"
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      // Done task 3 is still in category B (Cleanup deletes it), so this also shows done tasks are excluded.
+      pm.test('category has no not-done task left', () => {
+        pm.expect(result.isError).to.eql(false)
+        pm.expect(result.structuredContent).to.eql({ tasks: [] })
+      })

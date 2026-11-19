@@ -1,0 +1,23 @@
+$kind: http-request
+order: 4000
+method: PATCH
+url: '{{baseUrl}}/tasks/{{taskId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "title": "Renamed", "done": true, "category": "{{tempCategoryId}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 with updated fields', () => {
+        pm.response.to.have.status(200)
+        const t = pm.response.json()
+        pm.expect(t.id).to.eql(pm.collectionVariables.get('taskId'))
+        pm.expect(t.title).to.eql('Renamed')
+        pm.expect(t.done).to.eql(true)
+        pm.expect(t.category).to.eql(pm.collectionVariables.get('tempCategoryId'))
+      })

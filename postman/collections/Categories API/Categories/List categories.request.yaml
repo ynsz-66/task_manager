@@ -1,0 +1,21 @@
+$kind: http-request
+order: 2000
+method: GET
+url: '{{baseUrl}}/categories'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 sorted by order, Other last', () => {
+        pm.response.to.have.status(200)
+        const categories = pm.response.json()
+        pm.expect(categories.at(-1).name).to.eql('Other')
+        const orders = categories.slice(0, -1).map((c) => c.order)
+        pm.expect(orders).to.eql(orders.map((_, i) => i))
+      })
+      pm.test('items expose id, name, order and no _id', () => {
+        for (const c of pm.response.json()) {
+          pm.expect(c).to.include.keys('id', 'name', 'order')
+          pm.expect(c).to.not.have.property('_id')
+        }
+      })

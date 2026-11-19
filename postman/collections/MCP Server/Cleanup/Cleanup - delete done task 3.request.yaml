@@ -1,0 +1,10 @@
+$kind: http-request
+order: 2500
+method: DELETE
+url: '{{baseUrl}}/tasks/{{catTaskId3}}'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      // delete_category_task only removes undone tasks, so task 3 must still exist here.
+      pm.test('204 done task 3 deleted', () => pm.response.to.have.status(204))

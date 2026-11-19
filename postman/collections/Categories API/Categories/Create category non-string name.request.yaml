@@ -1,0 +1,19 @@
+$kind: http-request
+order: 3600
+method: POST
+url: '{{baseUrl}}/categories'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "name": 42 }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('400 non-string name', () => {
+        pm.response.to.have.status(400)
+        pm.expect(pm.response.json().error).to.eql('name must be 2 to 20 characters')
+      })

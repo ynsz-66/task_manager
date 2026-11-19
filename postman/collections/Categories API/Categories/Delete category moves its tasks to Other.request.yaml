@@ -1,0 +1,12 @@
+$kind: http-request
+order: 7200
+method: GET
+url: '{{baseUrl}}/tasks'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('task now in Other', () => {
+        const task = pm.response.json().find((t) => t.id === pm.collectionVariables.get('taskId'))
+        pm.expect(task.category).to.eql(pm.collectionVariables.get('otherId'))
+      })

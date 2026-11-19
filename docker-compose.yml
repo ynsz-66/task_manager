@@ -1,0 +1,42 @@
+services:
+  mongo:
+    image: mongo:8
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      MONGODB_URI: ${MONGODB_URI:?MONGODB_URI manquant, voir .env.example}
+      API_TOKEN: ${API_TOKEN:?API_TOKEN manquant, voir .env.example}
+      PORT: 3000
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - default
+      - proxy
+
+  mcp:
+    build: ./mcp
+    restart: unless-stopped
+    environment:
+      API_URL: ${API_URL:?API_URL manquant, voir .env.example}
+      API_TOKEN: ${API_TOKEN:?API_TOKEN manquant, voir .env.example}
+    networks:
+      - default
+      - proxy
+
+networks:
+  proxy:
+    external: true
+
+volumes:
+  mongo-data:

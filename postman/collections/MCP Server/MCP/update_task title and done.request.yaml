@@ -1,0 +1,33 @@
+$kind: http-request
+order: 5000
+method: POST
+url: '{{mcpUrl}}'
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 8,
+      "method": "tools/call",
+      "params": {
+        "name": "update_task",
+        "arguments": {
+          "task_id": "{{taskId1}}",
+          "title": "mcp-task1b-{{suffix}}",
+          "done": true
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      const text = result.content.map((c) => c.text).join('\n')
+      const task = result.structuredContent
+      pm.test('title and done updated', () => {
+        pm.expect(result.isError).to.eql(false)
+        pm.expect(task.id).to.eql(pm.collectionVariables.get('taskId1'))
+        pm.expect(task.title).to.eql(`mcp-task1b-${pm.collectionVariables.get('suffix')}`)
+        pm.expect(task.done).to.eql(true)
+      })

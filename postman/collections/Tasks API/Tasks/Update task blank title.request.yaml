@@ -1,0 +1,19 @@
+$kind: http-request
+order: 4300
+method: PATCH
+url: '{{baseUrl}}/tasks/{{taskId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "title": "  " }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('400 title cannot be empty', () => {
+        pm.response.to.have.status(400)
+        pm.expect(pm.response.json().error).to.eql('title cannot be empty')
+      })

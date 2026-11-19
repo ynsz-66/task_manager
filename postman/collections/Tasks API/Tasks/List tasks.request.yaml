@@ -1,0 +1,19 @@
+$kind: http-request
+order: 2000
+method: GET
+url: '{{baseUrl}}/tasks'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 and an array', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json()).to.be.an('array')
+      })
+      pm.test('tasks expose id, not _id', () => {
+        for (const t of pm.response.json()) {
+          pm.expect(t).to.include.keys('id', 'title', 'category', 'done', 'createdAt', 'updatedAt')
+          pm.expect(t).to.not.have.property('_id')
+          pm.expect(t.done).to.be.a('boolean')
+        }
+      })

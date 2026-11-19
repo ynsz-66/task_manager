@@ -1,0 +1,19 @@
+$kind: http-request
+order: 6200
+method: PATCH
+url: '{{baseUrl}}/categories/not-an-id'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "name": "pmX{{suffix}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('400 invalid id', () => {
+        pm.response.to.have.status(400)
+        pm.expect(pm.response.json().error).to.eql('invalid id')
+      })

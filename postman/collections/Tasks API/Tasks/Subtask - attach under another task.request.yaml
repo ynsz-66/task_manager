@@ -1,0 +1,21 @@
+$kind: http-request
+order: 7350
+method: PATCH
+url: '{{baseUrl}}/tasks/{{subGrandchildId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "parent": "{{subParentId}}", "category": "{{otherCategoryId}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 moved under the task, in its category', () => {
+        pm.response.to.have.status(200)
+        const t = pm.response.json()
+        pm.expect(t.parent).to.eql(pm.collectionVariables.get('subParentId'))
+        pm.expect(t.category).to.eql(pm.collectionVariables.get('tempCategoryId'))
+      })

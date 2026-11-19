@@ -1,0 +1,19 @@
+$kind: http-request
+order: 7930
+method: PATCH
+url: '{{baseUrl}}/tasks/{{reorderId1}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "position": 0 }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 at its new index', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().position).to.eql(0)
+      })

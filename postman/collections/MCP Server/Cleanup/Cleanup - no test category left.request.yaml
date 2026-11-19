@@ -1,0 +1,12 @@
+$kind: http-request
+order: 3000
+method: GET
+url: '{{baseUrl}}/categories'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const suffix = pm.collectionVariables.get('suffix')
+      pm.test('no category of this run left', () => {
+        pm.expect(pm.response.json().filter((c) => c.name.endsWith(suffix))).to.be.empty
+      })

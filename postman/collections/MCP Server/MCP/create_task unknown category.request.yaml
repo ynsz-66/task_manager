@@ -1,0 +1,27 @@
+$kind: http-request
+order: 3200
+method: POST
+url: '{{mcpUrl}}'
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 6,
+      "method": "tools/call",
+      "params": {
+        "name": "create_task",
+        "arguments": {
+          "title": "mcp-x-{{suffix}}",
+          "category": "nope-{{suffix}}"
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      const text = result.content.map((c) => c.text).join('\n')
+      pm.test('tool call is an error', () => pm.expect(result.isError).to.eql(true))
+      pm.test('error text', () => pm.expect(text).to.match(/Category 'nope-\d+' not found/))

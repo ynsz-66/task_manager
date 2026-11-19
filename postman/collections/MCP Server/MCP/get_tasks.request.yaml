@@ -1,0 +1,27 @@
+$kind: http-request
+order: 4000
+method: POST
+url: '{{mcpUrl}}'
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 7,
+      "method": "tools/call",
+      "params": {
+        "name": "get_tasks",
+        "arguments": {}
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      const text = result.content.map((c) => c.text).join('\n')
+      const ids = result.structuredContent.result.map((t) => t.id)
+      pm.test('both created tasks listed', () => {
+        pm.expect(result.isError).to.eql(false)
+        pm.expect(ids).to.include.members([pm.collectionVariables.get('taskId1'), pm.collectionVariables.get('taskId2')])
+      })

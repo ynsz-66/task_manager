@@ -1,0 +1,22 @@
+$kind: http-request
+order: 7100
+method: POST
+url: '{{baseUrl}}/tasks'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "title": "Postman child", "category": "{{otherCategoryId}}", "parent": "{{subParentId}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 subtask in the parent\'s category', () => {
+        pm.response.to.have.status(200)
+        const t = pm.response.json()
+        pm.expect(t.parent).to.eql(pm.collectionVariables.get('subParentId'))
+        pm.expect(t.category).to.eql(pm.collectionVariables.get('tempCategoryId'))
+      })
+      pm.collectionVariables.set('subChildId', pm.response.json().id)

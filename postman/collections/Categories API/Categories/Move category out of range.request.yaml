@@ -1,0 +1,19 @@
+$kind: http-request
+order: 5500
+method: PATCH
+url: '{{baseUrl}}/categories/{{catAId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "order": {{orderOut}} }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('400 order >= count', () => {
+        pm.response.to.have.status(400)
+        pm.expect(pm.response.json().error).to.eql(`order must be between 0 and ${pm.collectionVariables.get('orderLast')}`)
+      })

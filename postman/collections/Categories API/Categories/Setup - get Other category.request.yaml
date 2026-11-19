@@ -1,0 +1,22 @@
+$kind: http-request
+order: 1000
+method: GET
+url: '{{baseUrl}}/categories'
+scripts:
+  - type: beforeRequest
+    language: text/javascript
+    code: |-
+      // Unique suffix so names never collide with real data (names are 2-20 chars).
+      pm.collectionVariables.set('suffix', String(Date.now()).slice(-8))
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const categories = pm.response.json()
+      const other = categories.find((c) => c.name === 'Other')
+      pm.test('Other category exists', () => pm.expect(other).to.be.an('object'))
+      const n = categories.length - 1
+      pm.collectionVariables.set('otherId', other.id)
+      pm.collectionVariables.set('otherMoveOrder', other.order + 1)
+      pm.collectionVariables.set('n', n)
+      pm.collectionVariables.set('orderLast', n + 1)
+      pm.collectionVariables.set('orderOut', n + 2)

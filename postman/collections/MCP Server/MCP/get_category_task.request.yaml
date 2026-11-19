@@ -1,0 +1,28 @@
+$kind: http-request
+order: 8400
+method: POST
+url: '{{mcpUrl}}'
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 30,
+      "method": "tools/call",
+      "params": {
+        "name": "get_category_task",
+        "arguments": {
+          "category_id": "{{catBId}}"
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      pm.test('the 2 not-done tasks of B, newest first', () => {
+        pm.expect(result.isError).to.eql(false)
+        const v = (k) => pm.collectionVariables.get(k)
+        pm.expect(result.structuredContent.tasks.map((t) => t.id)).to.eql([v('catTaskId2'), v('catTaskId1')])
+      })

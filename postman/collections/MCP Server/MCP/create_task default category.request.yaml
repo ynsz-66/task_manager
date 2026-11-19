@@ -1,0 +1,32 @@
+$kind: http-request
+order: 3000
+method: POST
+url: '{{mcpUrl}}'
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 4,
+      "method": "tools/call",
+      "params": {
+        "name": "create_task",
+        "arguments": {
+          "title": "mcp-task1-{{suffix}}"
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      const text = result.content.map((c) => c.text).join('\n')
+      const task = result.structuredContent
+      pm.test('task created in Other', () => {
+        pm.expect(result.isError).to.eql(false)
+        pm.expect(task.title).to.eql(`mcp-task1-${pm.collectionVariables.get('suffix')}`)
+        pm.expect(task.category).to.eql(pm.collectionVariables.get('otherCategoryId'))
+        pm.expect(task.done).to.eql(false)
+      })
+      pm.collectionVariables.set('taskId1', task.id)

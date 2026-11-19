@@ -1,0 +1,14 @@
+$kind: http-request
+order: 5300
+method: GET
+url: '{{baseUrl}}/tasks'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('no done task left, undone task kept', () => {
+        const tasks = pm.response.json()
+        pm.expect(tasks.filter((t) => t.done)).to.be.empty
+        pm.expect(tasks.map((t) => t.id)).to.not.include(pm.collectionVariables.get('taskId'))
+        pm.expect(tasks.map((t) => t.id)).to.include(pm.collectionVariables.get('taskId2'))
+      })

@@ -1,0 +1,12 @@
+$kind: http-request
+order: 5200
+method: DELETE
+url: '{{baseUrl}}/tasks?done=true'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 with deletedCount >= 1', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().deletedCount).to.be.a('number').and.at.least(1)
+      })

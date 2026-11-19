@@ -1,0 +1,12 @@
+$kind: http-request
+order: 6600
+method: DELETE
+url: '{{baseUrl}}/categories/{{catAId}}/tasks'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 deletes the not-done task only', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().deletedCount).to.eql(1)
+      })

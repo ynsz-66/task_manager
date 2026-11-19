@@ -1,0 +1,15 @@
+$kind: http-request
+order: 4000
+method: GET
+url: '{{baseUrl}}/categories'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('A at n, B at n+1, Other last', () => {
+        const categories = pm.response.json()
+        const byId = (id) => categories.find((c) => c.id === pm.collectionVariables.get(id))
+        pm.expect(byId('catAId').order).to.eql(Number(pm.collectionVariables.get('n')))
+        pm.expect(byId('catBId').order).to.eql(Number(pm.collectionVariables.get('orderLast')))
+        pm.expect(categories.at(-1).name).to.eql('Other')
+      })

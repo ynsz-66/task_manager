@@ -1,0 +1,12 @@
+$kind: http-request
+order: 7960
+method: GET
+url: '{{baseUrl}}/tasks'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const v = (n) => pm.collectionVariables.get(`reorderId${n}`)
+      const mine = pm.response.json().filter((t) => [v(1), v(2), v(3)].includes(t.id))
+      pm.test('listed in the new order', () => pm.expect(mine.map((t) => t.id)).to.eql([3, 2, 1].map(v)))
+      pm.test('siblings renumbered 0..2', () => pm.expect(mine.map((t) => t.position)).to.eql([0, 1, 2]))

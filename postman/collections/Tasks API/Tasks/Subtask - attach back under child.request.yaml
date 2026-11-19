@@ -1,0 +1,19 @@
+$kind: http-request
+order: 7390
+method: PATCH
+url: '{{baseUrl}}/tasks/{{subGrandchildId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "parent": "{{subChildId}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 back under the child', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().parent).to.eql(pm.collectionVariables.get('subChildId'))
+      })

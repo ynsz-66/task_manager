@@ -1,0 +1,20 @@
+$kind: http-request
+order: 7000
+method: POST
+url: '{{baseUrl}}/tasks'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "title": "Postman parent", "category": "{{tempCategoryId}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 root task has parent null', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().parent).to.eql(null)
+      })
+      pm.collectionVariables.set('subParentId', pm.response.json().id)

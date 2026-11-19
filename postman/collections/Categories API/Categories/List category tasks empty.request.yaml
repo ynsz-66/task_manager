@@ -1,0 +1,12 @@
+$kind: http-request
+order: 6910
+method: GET
+url: '{{baseUrl}}/categories/{{catBId}}/tasks'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 empty list for a category without tasks', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json()).to.eql({ tasks: [] })
+      })

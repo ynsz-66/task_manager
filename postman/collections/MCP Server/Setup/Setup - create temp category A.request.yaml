@@ -1,0 +1,22 @@
+$kind: http-request
+order: 1000
+method: POST
+url: '{{baseUrl}}/categories'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "name": "mcpA-{{suffix}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 category created', () => pm.response.to.have.status(200))
+      pm.collectionVariables.set('catAId', pm.response.json().id)
+  - type: beforeRequest
+    language: text/javascript
+    code: |-
+      // Unique per run, short enough for the 20-char category name limit.
+      pm.collectionVariables.set('suffix', String(Date.now()).slice(-6))

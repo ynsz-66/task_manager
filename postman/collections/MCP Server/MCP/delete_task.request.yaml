@@ -1,0 +1,28 @@
+$kind: http-request
+order: 8000
+method: POST
+url: '{{mcpUrl}}'
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 26,
+      "method": "tools/call",
+      "params": {
+        "name": "delete_task",
+        "arguments": {
+          "task_id": "{{taskId1}}"
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      const text = result.content.map((c) => c.text).join('\n')
+      pm.test('task deleted', () => {
+        pm.expect(result.isError).to.eql(false)
+        pm.expect(result.structuredContent.result).to.eql(`Task ${pm.collectionVariables.get('taskId1')} deleted`)
+      })

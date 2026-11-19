@@ -1,0 +1,19 @@
+$kind: http-request
+order: 5300
+method: PATCH
+url: '{{baseUrl}}/categories/{{catAId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "order": {{orderLast}} }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 moved to n+1', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().order).to.eql(Number(pm.collectionVariables.get('orderLast')))
+      })

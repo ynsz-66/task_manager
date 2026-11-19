@@ -1,0 +1,31 @@
+$kind: http-request
+order: 3150
+method: POST
+url: '{{mcpUrl}}'
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 37,
+      "method": "tools/call",
+      "params": {
+        "name": "create_task",
+        "arguments": {
+          "title": "mcp-sub-{{suffix}}",
+          "parent_id": "{{taskId2}}"
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      // Deleted with its parent by "delete_task second task".
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      const task = result.structuredContent
+      pm.test('subtask created under task 2, in its category', () => {
+        pm.expect(result.isError).to.eql(false)
+        pm.expect(task.parent).to.eql(pm.collectionVariables.get('taskId2'))
+        pm.expect(task.category).to.eql(pm.collectionVariables.get('catAId'))
+      })

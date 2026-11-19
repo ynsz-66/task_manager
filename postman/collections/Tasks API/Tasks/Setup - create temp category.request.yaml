@@ -1,0 +1,17 @@
+$kind: http-request
+order: 1100
+method: POST
+url: '{{baseUrl}}/categories'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "name": "pm-{{$timestamp}}" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 category created', () => pm.response.to.have.status(200))
+      pm.collectionVariables.set('tempCategoryId', pm.response.json().id)
