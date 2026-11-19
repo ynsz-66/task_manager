@@ -1,7 +1,7 @@
 # Logs
 logs
 
-# ─── Secrets / environnement ─────────────────────────────
+# ─── Secrets / environment ───────────────────────────────
 .env
 .env.*
 !.env.example
@@ -178,7 +178,7 @@ vite.config.ts.timestamp-*
 pnpm-debug.log*
 lerna-debug.log*
 
-# ─── Python (serveur MCP) ────────────────────────────────
+# ─── Python (MCP server) ──────────────────────────────────
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -200,7 +200,7 @@ mongodb-data/
 *.dump
 docker-compose.override.yml
 
-# ─── Éditeurs / OS ───────────────────────────────────────
+# ─── Editors / OS ───────────────────────────────────────
 .vscode/*
 !.vscode/extensions.json
 .idea/
@@ -212,7 +212,7 @@ docker-compose.override.yml
 .DS_Store
 Thumbs.db
 
-# ─── Outils ──────────────────────────────────────────────
+# ─── Tools ───────────────────────────────────────────────
 graphify-out/
 .vercel
 .postman/

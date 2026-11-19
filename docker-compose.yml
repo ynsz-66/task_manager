@@ -14,8 +14,8 @@ services:
     build: ./backend
     restart: unless-stopped
     environment:
-      MONGODB_URI: ${MONGODB_URI:?MONGODB_URI manquant, voir .env.example}
-      API_TOKEN: ${API_TOKEN:?API_TOKEN manquant, voir .env.example}
+      MONGODB_URI: ${MONGODB_URI:?MONGODB_URI missing, see .env.example}
+      API_TOKEN: ${API_TOKEN:?API_TOKEN missing, see .env.example}
       PORT: 3000
     depends_on:
       mongo:
@@ -28,8 +28,8 @@ services:
     build: ./mcp
     restart: unless-stopped
     environment:
-      API_URL: ${API_URL:?API_URL manquant, voir .env.example}
-      API_TOKEN: ${API_TOKEN:?API_TOKEN manquant, voir .env.example}
+      API_URL: ${API_URL:?API_URL missing, see .env.example}
+      API_TOKEN: ${API_TOKEN:?API_TOKEN missing, see .env.example}
     networks:
       - default
       - proxy
