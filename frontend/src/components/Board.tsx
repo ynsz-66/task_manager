@@ -18,8 +18,11 @@ import {
 import type { Board as BoardState } from '../hooks/useBoard'
 import type { Task } from '../types'
 import { CATEGORY_NAME_MAX, DEFAULT_CATEGORY_NAME, DONE_COLUMN_ID } from '../constants'
+import { useKeyboardNav, type Command } from '../hooks/useKeyboardNav'
+import { navColumns, outdentGap, shiftGap, siblingsOf, type PaletteItem, type Selection } from '../keyboardNav'
 import { AddTaskForm } from './AddTaskForm'
 import { Column } from './Column'
+import { CommandPalette } from './CommandPalette'
 import { RenameField } from './RenameField'
 import { TaskGap, TaskItem } from './TaskItem'
 
@@ -53,15 +56,19 @@ interface BoardProps {
   onRequestDeleteCategory: (id: string) => void
   onRequestClearDone: () => void
   onRequestClearCategory: (id: string) => void
+  onRequestHelp: () => void
+  onRequestNewCategory: () => void
+  onToggleTheme: () => void
 }
 
-export function Board({ board, onRequestDeleteCategory, onRequestClearDone, onRequestClearCategory }: BoardProps) {
+export function Board({ board, onRequestDeleteCategory, onRequestClearDone, onRequestClearCategory, onRequestHelp, onRequestNewCategory, onToggleTheme }: BoardProps) {
   const { tasks, categories, freshId, editingId, leavingId } = board
   const [draggedId, setDraggedId] = useState<string | null>(null)
   // Column or task whose add-task field is open (ids are unique across both).
   const [addingIn, setAddingIn] = useState<string | null>(null)
   // Column or task whose name is being edited (double-click, or long press without moving on touch).
   const [renamingId, setRenamingId] = useState<string | null>(null)
+  const [paletteOpen, setPaletteOpen] = useState(false)
   // Mouse: drag starts after 5 px, so clicks stay clicks.
   // Touch: long press, so scrolling isn't blocked.
   const sensors = useSensors(
@@ -118,6 +125,86 @@ export function Board({ board, onRequestDeleteCategory, onRequestClearDone, onRe
     { id: DONE_COLUMN_ID, name: 'Done', isDone: true, movable: false, tasks: sorted.filter((t) => isRoot(t) && t.done) },
   ]
 
+  const { selection, selectTask, selectColumn, releaseTask } = useKeyboardNav(navColumns(columns, sorted, leavingId), runCommand)
+
+  /** A key from useKeyboardNav, on the selected task or column. */
+  function runCommand(command: Command, selected: Selection | null) {
+    const column = columns.find((c) => c.id === selected?.column)
+    const task = tasks.find((t) => t.id === selected?.task)
+    if (command === 'help') return onRequestHelp()
+    if (command === 'palette') return setPaletteOpen(true)
+    if (command === 'newCategory') return onRequestNewCategory()
+    if (command === 'undo') return board.undoDelete()
+    if (command === 'add') return column && !column.isDone && setAddingIn(column.id)
+    if (command === 'rename') return column?.movable && setRenamingId(column.id)
+    if (!column || !task) return
+    if (command === 'toggle') {
+      board.changeTask(task.id, { done: !task.done })
+      // A root task leaves the column: the selection stays on the row, on the task below.
+      if (column.tasks.includes(task)) releaseTask()
+      return
+    }
+    if (command === 'addSubtask') return !task.done && setAddingIn(task.id)
+    if (command === 'edit') return board.setEditingId(task.id)
+    if (command === 'delete') return board.deleteTask(task.id)
+    // The Done column has no order to change.
+    if (column.isDone) return
+    if (command === 'moveDown' || command === 'moveUp') {
+      const gap = shiftGap(task, sorted, command === 'moveDown' ? 1 : -1)
+      if (gap) board.reorderTask(task.id, gap)
+    } else if (command === 'moveLeft' || command === 'moveRight') {
+      const target = columns[columns.indexOf(column) + (command === 'moveLeft' ? -1 : 1)]
+      if (target && !target.isDone) board.moveTask(task.id, target.id)
+    } else if (command === 'indent') {
+      const siblings = siblingsOf(task, sorted)
+      const previous = siblings[siblings.indexOf(task) - 1]
+      if (previous) board.nestTask(task.id, previous.id)
+    } else if (command === 'outdent') {
+      const gap = outdentGap(task, sorted)
+      if (gap) board.reorderTask(task.id, gap)
+    }
+  }
+
+  /** Palette entries: the selected task's and column's commands, then the global ones, then every category and task. */
+  function paletteItems(): PaletteItem[] {
+    const task = tasks.find((t) => t.id === selection?.task)
+    const column = columns.find((c) => c.id === selection?.column)
+    const command = (id: Command, label: string, keys: string, detail?: string): PaletteItem => ({
+      id,
+      label,
+      keys,
+      detail,
+      run: () => runCommand(id, selection),
+    })
+    const items: PaletteItem[] = []
+    if (task) {
+      items.push(command('toggle', task.done ? 'Uncheck' : 'Check', 'x', task.title), command('edit', 'Edit', 'i', task.title))
+      if (!task.done) items.push(command('addSubtask', 'New subtask', 'a', task.title))
+      items.push(command('delete', 'Delete', 'dd', task.title))
+      if (!column?.isDone) {
+        items.push(
+          command('moveUp', 'Move up', 'K', task.title),
+          command('moveDown', 'Move down', 'J', task.title),
+          command('moveLeft', 'Move to the previous column', 'H', task.title),
+          command('moveRight', 'Move to the next column', 'L', task.title),
+          command('indent', 'Nest under the task above', '>', task.title),
+          command('outdent', 'Take out one level', '<', task.title),
+        )
+      }
+    }
+    if (column && !column.isDone) items.push(command('add', 'New task', 'o', column.name))
+    if (column?.movable) items.push(command('rename', 'Rename the category', 'r', column.name))
+    if (board.deletedTask) items.push(command('undo', 'Undo the delete', 'u', board.deletedTask.title))
+    items.push(
+      { id: 'new-category', label: 'New category', keys: 'c', run: onRequestNewCategory },
+      { id: 'theme', label: 'Toggle the theme', run: onToggleTheme },
+      { id: 'help', label: 'Keyboard shortcuts', keys: '?', run: onRequestHelp },
+      ...columns.map((c) => ({ id: `col-${c.id}`, label: 'Go to category', detail: c.name, run: () => selectColumn(c.id) })),
+      ...sorted.map((t) => ({ id: `task-${t.id}`, label: 'Go to task', detail: t.title, run: () => selectTask(t.id) })),
+    )
+    return items
+  }
+
   /** Tasks of one list, with a drop gap before each and one at the end (none in the Done column: `parent` undefined). */
   function renderList(list: Task[], showCategory: boolean, parent: string | null | undefined, category: string): ReactNode {
     const gap = (before: string | null) =>
@@ -138,6 +225,8 @@ export function Board({ board, onRequestDeleteCategory, onRequestClearDone, onRe
         isEditing={task.id === editingId}
         isLeaving={task.id === leavingId}
         isAdding={task.id === addingIn}
+        isSelected={task.id === selection?.task}
+        onSelect={() => selectTask(task.id)}
         onChange={(changes) => board.changeTask(task.id, changes)}
         onDelete={() => board.deleteTask(task.id)}
         onStartEdit={() => board.setEditingId(task.id)}
@@ -175,6 +264,7 @@ export function Board({ board, onRequestDeleteCategory, onRequestClearDone, onRe
             id={column.id}
             isDone={column.isDone}
             movable={column.movable}
+            isSelected={selection?.column === column.id && !selection.task}
             slot={column.isDone ? undefined : index}
             slotIdle={draggedIndex !== -1 && (index === draggedIndex || index === draggedIndex + 1)}
             // --i: column rank, for the cascading entrance.
@@ -260,6 +350,8 @@ export function Board({ board, onRequestDeleteCategory, onRequestClearDone, onRe
           </Column>
         ))}
       </main>
+
+      {paletteOpen && <CommandPalette items={paletteItems()} onClose={() => setPaletteOpen(false)} />}
 
       {/* Copy that follows the pointer, rendered outside the columns to sit above them. */}
       <DragOverlay className="drag-overlay" dropAnimation={dropAnimation}>

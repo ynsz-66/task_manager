@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 import type { Category, Task } from '../types'
 import type { Gap } from '../hooks/useBoard'
@@ -24,6 +24,8 @@ interface TaskItemProps {
   isEditing: boolean
   isLeaving: boolean
   isAdding: boolean
+  /** Keyboard selection (useKeyboardNav). */
+  isSelected: boolean
   /** Subtasks list and add-subtask field, shown under the task. */
   children?: ReactNode
   onChange: (changes: TaskChanges) => void
@@ -31,26 +33,44 @@ interface TaskItemProps {
   onStartEdit: () => void
   onCancelEdit: () => void
   onAddSubtask: () => void
+  onSelect: () => void
 }
 
-export function TaskItem({ task, categories, showCategory, isFresh, isEditing, isLeaving, isAdding, children, onChange, onDelete, onStartEdit, onCancelEdit, onAddSubtask }: TaskItemProps) {
+export function TaskItem({ task, categories, showCategory, isFresh, isEditing, isLeaving, isAdding, isSelected, children, onChange, onDelete, onStartEdit, onCancelEdit, onAddSubtask, onSelect }: TaskItemProps) {
   // No drag while editing or adding a subtask, so the input text can be selected.
   const { setNodeRef: setDragRef, listeners, isDragging } = useDraggable({ id: task.id, disabled: isEditing || isAdding })
   // Dropping another task here makes it a subtask of this one.
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: task.id, data: { type: 'task' } })
-  const className = ['task', task.done && 'done', isFresh && 'fresh', isEditing && 'editing', isDragging && 'dragging', isLeaving && 'leaving', isOver && 'over']
+  const className = ['task', task.done && 'done', isFresh && 'fresh', isEditing && 'editing', isDragging && 'dragging', isLeaving && 'leaving', isOver && 'over', isSelected && 'selected']
     .filter(Boolean)
     .join(' ')
   const categoryName = categoryNameOf(categories, task.category)
+  const ref = useRef<HTMLLIElement | null>(null)
+
+  // The selected row scrolls into view and takes the focus back once its edit or add field closes,
+  // unless the focus is somewhere else on purpose (a field, a button outside the board).
+  useEffect(() => {
+    const node = ref.current
+    if (!isSelected || isEditing || isAdding || !node) return
+    node.scrollIntoView?.({ block: 'nearest' })
+    const active = document.activeElement
+    if (!active || active === document.body || active.closest('.task')) node.focus({ preventScroll: true })
+  }, [isSelected, isEditing, isAdding])
 
   return (
     <li
       ref={(node) => {
         setDropRef(node)
         setDragRef(node)
+        ref.current = node
       }}
       {...listeners}
       className={className}
+      tabIndex={isSelected ? 0 : -1}
+      // A click on a subtask selects the subtask, not its parents too.
+      onClick={(e) => {
+        if (e.target instanceof Element && e.target.closest('.task') === e.currentTarget) onSelect()
+      }}
     >
       {isEditing ? (
         <EditForm task={task} onSave={(title) => onChange({ title })} onCancel={onCancelEdit} />

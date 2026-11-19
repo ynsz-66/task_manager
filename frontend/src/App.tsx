@@ -8,6 +8,7 @@ import { AddForms } from './components/AddForms'
 import { Board } from './components/Board'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { Modal } from './components/Modal'
+import { ShortcutsHelp } from './components/ShortcutsHelp'
 import { UndoToast } from './components/UndoToast'
 import './App.css'
 
@@ -18,7 +19,9 @@ function App() {
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
   const [confirmClearDone, setConfirmClearDone] = useState(false)
   const [categoryToClear, setCategoryToClear] = useState<Category | null>(null)
+  const [showHelp, setShowHelp] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
+  const categoryInputRef = useRef<HTMLInputElement>(null)
   const headerHidden = useHideOnScroll(headerRef)
 
   // Confirm only if the category has tasks (they will be moved to Other).
@@ -40,12 +43,15 @@ function App() {
         <div className="top-row">
           <h1>Tasks</h1>
           <div className="prefs">
+            <button type="button" className="ghost" onClick={() => setShowHelp(true)} aria-label="Keyboard shortcuts">
+              ?
+            </button>
             <button type="button" className="ghost" onClick={toggleTheme}>
               {theme === 'dark' ? 'Light' : 'Dark'}
             </button>
           </div>
         </div>
-        <AddForms onAddCategory={board.addCategory} />
+        <AddForms onAddCategory={board.addCategory} inputRef={categoryInputRef} />
       </header>
 
       <Board
@@ -53,6 +59,10 @@ function App() {
         onRequestDeleteCategory={requestDeleteCategory}
         onRequestClearDone={() => setConfirmClearDone(true)}
         onRequestClearCategory={(id) => setCategoryToClear(categories.find((c) => c.id === id) ?? null)}
+        onRequestHelp={() => setShowHelp(true)}
+        // The header reveals itself while its field has the focus (.top:focus-within).
+        onRequestNewCategory={() => categoryInputRef.current?.focus()}
+        onToggleTheme={toggleTheme}
       />
 
       {/* Always mounted, so screen readers announce the toast when it appears. */}
@@ -76,6 +86,8 @@ function App() {
           <strong>{DEFAULT_CATEGORY_NAME}</strong>.
         </ConfirmDialog>
       )}
+
+      {showHelp && <ShortcutsHelp onClose={() => setShowHelp(false)} />}
 
       {error && (
         <Modal key={error} title="Oops" onClose={board.clearError}>

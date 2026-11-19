@@ -422,6 +422,21 @@ button.ghost:hover {
   box-shadow: inset 0 0 0 2px var(--accent);
 }
 
+/* Keyboard selection (useKeyboardNav): a tinted row with an accent ring; the ring replaces the focus outline. */
+.task:focus {
+  outline: none;
+}
+
+.task.selected {
+  background-color: color-mix(in srgb, var(--accent) 10%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+/* An empty column selected from the keyboard: its drop ring, softer. */
+.col.selected::after {
+  opacity: 0.5;
+}
+
 /* The hovered row's own separators disappear into its highlight. */
 .task:hover::before,
 .task:hover + .task::before,
@@ -872,6 +887,115 @@ button.ghost:hover {
 
 .confirm-actions button.ghost {
   background: var(--fill);
+}
+
+/* Keyboard shortcuts list: keys on the left, action on the right. */
+.shortcuts {
+  width: min(24rem, calc(100vw - 2rem));
+}
+
+.shortcuts dl {
+  display: grid;
+  gap: 0.375rem;
+  margin: 0.75rem 0 1.25rem;
+  font-size: 0.875rem;
+  text-align: left;
+}
+
+.shortcuts dl div {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.shortcuts dt {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.shortcuts dd {
+  margin: 0;
+  color: var(--muted);
+}
+
+.shortcuts kbd {
+  min-width: 1.5rem;
+  padding: 0.0625rem 0.375rem;
+  font: 500 0.8125rem/1.4 ui-monospace, 'SF Mono', Menlo, monospace;
+  text-align: center;
+  color: var(--text);
+  background: var(--fill);
+  border-radius: 0.375rem;
+}
+
+/* Command palette: a search field over a scrolling list, near the top like Spotlight. */
+.palette {
+  width: min(34rem, calc(100vw - 2rem));
+  margin-top: 12vh;
+  text-align: left;
+}
+
+.palette input {
+  width: 100%;
+  padding: 1rem 1.125rem;
+  font-size: 1.0625rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.palette ul {
+  max-height: min(22rem, 55vh);
+  margin: 0;
+  padding: 0.375rem;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.palette li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9375rem;
+  border-radius: 0.625rem;
+  cursor: default;
+}
+
+.palette li[aria-selected='true'] {
+  color: var(--on-accent);
+  background: var(--accent);
+}
+
+.palette-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.palette-detail {
+  margin-left: 0.5rem;
+  color: var(--muted);
+}
+
+.palette li[aria-selected='true'] .palette-detail {
+  color: inherit;
+  opacity: 0.8;
+}
+
+.palette kbd {
+  flex: none;
+  padding: 0.0625rem 0.375rem;
+  font: 500 0.75rem/1.4 ui-monospace, 'SF Mono', Menlo, monospace;
+  color: inherit;
+  background: var(--fill);
+  border-radius: 0.375rem;
+}
+
+.palette .palette-empty {
+  justify-content: center;
+  color: var(--muted);
 }
 
 button.danger {
