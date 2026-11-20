@@ -1,0 +1,31 @@
+$kind: http-request
+order: 5060
+method: POST
+url: '{{mcpUrl}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 41,
+      "method": "tools/call",
+      "params": {
+        "name": "update_task",
+        "arguments": {
+          "task_id": "{{taskId1}}",
+          "due_date": "2099-02-01T18:30:00Z"
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      pm.test('due date set', () => {
+        pm.expect(result.isError).to.eql(false)
+        pm.expect(result.structuredContent.dueDate).to.eql(new Date('2099-02-01T18:30:00Z').toISOString())
+      })

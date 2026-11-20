@@ -1,0 +1,33 @@
+$kind: http-request
+order: 7200
+method: POST
+url: '{{mcpUrl}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 44,
+      "method": "tools/call",
+      "params": {
+        "name": "get_stats",
+        "arguments": {
+          "days": 7
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      const stats = result.structuredContent
+      pm.test('stats returned', () => {
+        pm.expect(result.isError).to.eql(false)
+        pm.expect(stats).to.have.all.keys('donePerDay', 'doneByCategory', 'overdue', 'dueSoon')
+        // Task 1 was checked by "update_task title and done".
+        pm.expect(stats.donePerDay.length).to.be.at.least(1)
+      })

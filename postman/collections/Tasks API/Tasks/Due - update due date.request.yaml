@@ -1,0 +1,20 @@
+$kind: http-request
+order: 8040
+method: PATCH
+url: '{{baseUrl}}/tasks/{{dueParentId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "dueDate": "2099-02-01T18:30:00Z" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 dueDate moved, reminder re-armed', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().dueDate).to.eql(new Date('2099-02-01T18:30:00Z').toISOString())
+        pm.expect(pm.response.json().notifiedAt).to.eql(null)
+      })

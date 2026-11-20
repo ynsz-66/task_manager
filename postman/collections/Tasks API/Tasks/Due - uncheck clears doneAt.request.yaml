@@ -1,0 +1,19 @@
+$kind: http-request
+order: 8100
+method: PATCH
+url: '{{baseUrl}}/tasks/{{dueParentId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "done": false }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 doneAt cleared', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().doneAt).to.eql(null)
+      })

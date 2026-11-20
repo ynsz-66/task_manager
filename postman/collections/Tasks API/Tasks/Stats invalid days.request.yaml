@@ -1,0 +1,12 @@
+$kind: http-request
+order: 8220
+method: GET
+url: '{{baseUrl}}/stats?days=0'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('400 invalid days', () => {
+        pm.response.to.have.status(400)
+        pm.expect(pm.response.json().error).to.eql('days must be an integer between 1 and 366')
+      })

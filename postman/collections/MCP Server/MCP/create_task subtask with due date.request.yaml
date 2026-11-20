@@ -1,0 +1,33 @@
+$kind: http-request
+order: 3160
+method: POST
+url: '{{mcpUrl}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 40,
+      "method": "tools/call",
+      "params": {
+        "name": "create_task",
+        "arguments": {
+          "title": "mcp-sub-due-{{suffix}}",
+          "parent_id": "{{taskId2}}",
+          "due_date": "2099-01-15T09:00:00+01:00"
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      // Deleted with its parent by "delete_task second task".
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      pm.test('subtask created with its due date', () => {
+        pm.expect(result.isError).to.eql(false)
+        pm.expect(result.structuredContent.dueDate).to.eql(new Date('2099-01-15T09:00:00+01:00').toISOString())
+      })

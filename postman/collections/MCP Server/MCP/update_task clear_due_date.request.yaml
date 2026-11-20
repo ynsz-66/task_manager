@@ -1,0 +1,31 @@
+$kind: http-request
+order: 5070
+method: POST
+url: '{{mcpUrl}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 42,
+      "method": "tools/call",
+      "params": {
+        "name": "update_task",
+        "arguments": {
+          "task_id": "{{taskId1}}",
+          "clear_due_date": true
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      pm.test('due date removed', () => {
+        pm.expect(result.isError).to.eql(false)
+        pm.expect(result.structuredContent.dueDate).to.eql(null)
+      })

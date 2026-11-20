@@ -1,0 +1,23 @@
+$kind: http-request
+order: 8000
+method: POST
+url: '{{baseUrl}}/tasks'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "title": "Postman due parent", "category": "{{tempCategoryId}}", "dueDate": "2099-01-15T09:00:00+01:00" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const task = pm.response.json()
+      pm.test('200 dueDate stored in UTC, not done, not notified', () => {
+        pm.response.to.have.status(200)
+        pm.expect(task.dueDate).to.eql(new Date('2099-01-15T09:00:00+01:00').toISOString())
+        pm.expect(task.doneAt).to.eql(null)
+        pm.expect(task.notifiedAt).to.eql(null)
+      })
+      pm.collectionVariables.set('dueParentId', task.id)

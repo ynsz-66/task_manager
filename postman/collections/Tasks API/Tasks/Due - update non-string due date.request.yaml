@@ -1,0 +1,19 @@
+$kind: http-request
+order: 8050
+method: PATCH
+url: '{{baseUrl}}/tasks/{{dueParentId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "dueDate": 123 }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('400 dueDate must be a string', () => {
+        pm.response.to.have.status(400)
+        pm.expect(pm.response.json().error).to.eql('dueDate must be an ISO 8601 date with a timezone (e.g. 2026-11-21T09:00:00+01:00) or null')
+      })

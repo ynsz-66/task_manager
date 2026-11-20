@@ -1,0 +1,12 @@
+$kind: http-request
+order: 8210
+method: GET
+url: '{{baseUrl}}/stats?tz=Mars/Olympus'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('400 invalid tz', () => {
+        pm.response.to.have.status(400)
+        pm.expect(pm.response.json().error).to.eql('tz must be an IANA timezone (e.g. Europe/Paris)')
+      })

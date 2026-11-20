@@ -1,0 +1,20 @@
+$kind: http-request
+order: 8200
+method: GET
+url: '{{baseUrl}}/stats?days=7&tz=Europe/Paris'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const stats = pm.response.json()
+      pm.test('200 stats shape', () => {
+        pm.response.to.have.status(200)
+        pm.expect(stats).to.have.all.keys('donePerDay', 'doneByCategory', 'overdue', 'dueSoon')
+        pm.expect(stats.overdue).to.be.a('number')
+        pm.expect(stats.dueSoon).to.be.a('number')
+      })
+      pm.test('the subtask checked today is counted', () => {
+        const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(new Date())
+        pm.expect(stats.donePerDay.find((d) => d.date === today).count).to.be.at.least(1)
+        pm.expect(stats.doneByCategory.find((c) => c.category === pm.collectionVariables.get('tempCategoryName'))).to.be.an('object')
+      })

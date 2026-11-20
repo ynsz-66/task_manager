@@ -1,0 +1,29 @@
+$kind: http-request
+order: 7210
+method: POST
+url: '{{mcpUrl}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 45,
+      "method": "tools/call",
+      "params": {
+        "name": "get_stats",
+        "arguments": {
+          "tz": "Mars/Olympus"
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      const text = result.content.map((c) => c.text).join('\n')
+      pm.test('tool call is an error', () => pm.expect(result.isError).to.eql(true))
+      pm.test('error text', () => pm.expect(text).to.include('400 Bad Request: tz must be an IANA timezone'))

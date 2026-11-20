@@ -1,0 +1,13 @@
+$kind: http-request
+order: 8080
+method: GET
+url: '{{baseUrl}}/tasks'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('the checked subtask got doneAt too', () => {
+        const child = pm.response.json().find((t) => t.id === pm.collectionVariables.get('dueChildId'))
+        pm.expect(child.done).to.eql(true)
+        pm.expect(child.doneAt).to.be.a('string')
+      })

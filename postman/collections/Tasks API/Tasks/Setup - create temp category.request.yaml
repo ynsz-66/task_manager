@@ -15,3 +15,4 @@ scripts:
     code: |-
       pm.test('200 category created', () => pm.response.to.have.status(200))
       pm.collectionVariables.set('tempCategoryId', pm.response.json().id)
+      pm.collectionVariables.set('tempCategoryName', pm.response.json().name)

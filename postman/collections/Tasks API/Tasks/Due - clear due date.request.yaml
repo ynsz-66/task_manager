@@ -1,0 +1,19 @@
+$kind: http-request
+order: 8060
+method: PATCH
+url: '{{baseUrl}}/tasks/{{dueParentId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "dueDate": null }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 dueDate removed', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().dueDate).to.eql(null)
+      })

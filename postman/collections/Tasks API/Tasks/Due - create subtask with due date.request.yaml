@@ -1,0 +1,20 @@
+$kind: http-request
+order: 8030
+method: POST
+url: '{{baseUrl}}/tasks'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "title": "Postman due child", "parent": "{{dueParentId}}", "dueDate": "2099-02-01T18:30:00Z" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('200 subtask keeps its own dueDate', () => {
+        pm.response.to.have.status(200)
+        pm.expect(pm.response.json().dueDate).to.eql(new Date('2099-02-01T18:30:00Z').toISOString())
+      })
+      pm.collectionVariables.set('dueChildId', pm.response.json().id)

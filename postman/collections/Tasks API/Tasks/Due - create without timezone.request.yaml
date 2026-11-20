@@ -1,0 +1,19 @@
+$kind: http-request
+order: 8010
+method: POST
+url: '{{baseUrl}}/tasks'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "title": "Postman due bad", "dueDate": "2099-01-15T09:00" }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('400 timezone required', () => {
+        pm.response.to.have.status(400)
+        pm.expect(pm.response.json().error).to.eql('dueDate must be an ISO 8601 date with a timezone (e.g. 2026-11-21T09:00:00+01:00) or null')
+      })

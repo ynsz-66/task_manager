@@ -13,7 +13,7 @@ scripts:
   - type: afterResponse
     language: text/javascript
     code: |-
-      pm.test('400 nothing to update (title, category, done, parent or position)', () => {
+      pm.test('400 nothing to update (title, category, done, parent, position or dueDate)', () => {
         pm.response.to.have.status(400)
-        pm.expect(pm.response.json().error).to.eql('nothing to update (title, category, done, parent or position)')
+        pm.expect(pm.response.json().error).to.eql('nothing to update (title, category, done, parent, position or dueDate)')
       })

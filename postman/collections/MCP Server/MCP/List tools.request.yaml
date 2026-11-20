@@ -19,9 +19,9 @@ scripts:
       const expected = {
         get_tasks: [], create_task: ['title'], update_task: ['task_id'], delete_task: ['task_id'],
         get_categories: [], update_category: ['category_id'],
-        get_category_task: ['category_id'], delete_category_task: ['category_id'],
+        get_category_task: ['category_id'], delete_category_task: ['category_id'], get_stats: [],
       }
-      pm.test('exactly the 8 tools', () => pm.expect(Object.keys(byName)).to.have.members(Object.keys(expected)))
+      pm.test('exactly the 9 tools', () => pm.expect(Object.keys(byName)).to.have.members(Object.keys(expected)))
       Object.entries(expected).forEach(([name, required]) => {
         pm.test(`${name} input schema`, () => {
           const schema = byName[name].inputSchema
@@ -31,6 +31,6 @@ scripts:
       })
       pm.test('optional params', () => {
         pm.expect(byName.create_task.inputSchema.properties.category.default).to.eql('Other')
-        pm.expect(byName.update_task.inputSchema.properties).to.have.all.keys('task_id', 'title', 'category', 'done', 'parent_id', 'position')
+        pm.expect(byName.update_task.inputSchema.properties).to.have.all.keys('task_id', 'title', 'category', 'done', 'parent_id', 'position', 'due_date', 'clear_due_date')
         pm.expect(byName.update_category.inputSchema.properties).to.have.all.keys('category_id', 'name', 'order')
       })

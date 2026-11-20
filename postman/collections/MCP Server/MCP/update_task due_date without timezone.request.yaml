@@ -1,0 +1,30 @@
+$kind: http-request
+order: 5080
+method: POST
+url: '{{mcpUrl}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "jsonrpc": "2.0",
+      "id": 43,
+      "method": "tools/call",
+      "params": {
+        "name": "update_task",
+        "arguments": {
+          "task_id": "{{taskId1}}",
+          "due_date": "2099-01-15T09:00"
+        }
+      }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const result = JSON.parse(pm.variables.get('rpc')).result
+      const text = result.content.map((c) => c.text).join('\n')
+      pm.test('tool call is an error', () => pm.expect(result.isError).to.eql(true))
+      pm.test('error text', () => pm.expect(text).to.include('400 Bad Request: dueDate must be an ISO 8601 date with a timezone'))

@@ -1,0 +1,21 @@
+$kind: http-request
+order: 8070
+method: PATCH
+url: '{{baseUrl}}/tasks/{{dueParentId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    { "done": true }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const task = pm.response.json()
+      pm.test('200 doneAt set to now', () => {
+        pm.response.to.have.status(200)
+        pm.expect(Math.abs(Date.now() - Date.parse(task.doneAt))).to.be.below(60000)
+      })
+      pm.collectionVariables.set('dueParentDoneAt', task.doneAt)
