@@ -17,6 +17,10 @@ services:
       MONGODB_URI: ${MONGODB_URI:?MONGODB_URI missing, see .env.example}
       API_TOKEN: ${API_TOKEN:?API_TOKEN missing, see .env.example}
       PORT: 3000
+      # Optional: reminders are off without NTFY_URL (ntfy root URL) and NTFY_TOPIC.
+      NTFY_URL: ${NTFY_URL:-}
+      NTFY_TOPIC: ${NTFY_TOPIC:-}
+      NTFY_TOKEN: ${NTFY_TOKEN:-}
     depends_on:
       mongo:
         condition: service_healthy
