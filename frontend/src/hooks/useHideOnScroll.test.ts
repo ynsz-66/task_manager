@@ -15,7 +15,9 @@ function scrollTo(y: number) {
 function renderWithHeader() {
   const header = document.createElement('header')
   Object.defineProperty(header, 'offsetHeight', { value: HEADER_HEIGHT })
-  return renderHook(() => useHideOnScroll({ current: header }))
+  // Stable ref, like useRef in App: a new object per render would restart the effect.
+  const headerRef = { current: header }
+  return renderHook(() => useHideOnScroll(headerRef))
 }
 
 beforeEach(() => {
@@ -138,5 +140,22 @@ describe('useHideOnScroll', () => {
     })
     scrollTo(300)
     expect(result.current).toBe(false)
+  })
+
+  it('hideRef does what a board key does (selection made from the dashboard)', () => {
+    const header = document.createElement('header')
+    Object.defineProperty(header, 'offsetHeight', { value: HEADER_HEIGHT })
+    const headerRef = { current: header }
+    const hideRef: { current: (() => void) | null } = { current: null }
+    const { result, unmount } = renderHook(() => useHideOnScroll(headerRef, hideRef))
+    scrollTo(600)
+    scrollTo(400)
+    expect(result.current).toBe(false)
+    act(() => hideRef.current?.())
+    expect(result.current).toBe(true)
+    scrollTo(200)
+    expect(result.current).toBe(true)
+    unmount()
+    expect(hideRef.current).toBeNull()
   })
 })

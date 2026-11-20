@@ -24,7 +24,9 @@ function App() {
   const [showStats, setShowStats] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
   const categoryInputRef = useRef<HTMLInputElement>(null)
-  const headerHidden = useHideOnScroll(headerRef)
+  const selectTaskRef = useRef<((id: string) => void) | null>(null)
+  const hideHeaderRef = useRef<(() => void) | null>(null)
+  const headerHidden = useHideOnScroll(headerRef, hideHeaderRef)
 
   // Confirm only if the category has tasks (they will be moved to Other).
   function requestDeleteCategory(id: string) {
@@ -46,7 +48,7 @@ function App() {
           <h1>Tasks</h1>
           <div className="prefs">
             <button type="button" className="ghost" onClick={() => setShowStats(true)}>
-              Stats
+              Dashboard
             </button>
             <button type="button" className="ghost" onClick={() => setShowHelp(true)} aria-label="Keyboard shortcuts">
               ?
@@ -69,6 +71,7 @@ function App() {
         // The header reveals itself while its field has the focus (.top:focus-within).
         onRequestNewCategory={() => categoryInputRef.current?.focus()}
         onToggleTheme={toggleTheme}
+        selectRef={selectTaskRef}
       />
 
       {/* Always mounted, so screen readers announce the toast when it appears. */}
@@ -95,7 +98,19 @@ function App() {
 
       {showHelp && <ShortcutsHelp onClose={() => setShowHelp(false)} />}
 
-      {showStats && <StatsDialog onClose={() => setShowStats(false)} />}
+      {showStats && (
+        <StatsDialog
+          tasks={tasks}
+          categories={categories}
+          onClose={() => setShowStats(false)}
+          onSelectTask={(id) => {
+            setShowStats(false)
+            // The jump scrolls up, which would bring the header back over the task: hidden like after a board key.
+            hideHeaderRef.current?.()
+            selectTaskRef.current?.(id)
+          }}
+        />
+      )}
 
       {error && (
         <Modal key={error} title="Oops" onClose={board.clearError}>

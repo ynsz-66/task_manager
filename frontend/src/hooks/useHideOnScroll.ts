@@ -9,8 +9,9 @@ export const SCROLL_THRESHOLD = 8
  * It never hides while the bar's own height is still within the top of the page.
  * After a board key it stays hidden until the top of the page, so it never covers the keyboard selection;
  * the wheel or a pointer brings back the scroll-up behavior.
+ * `hideRef` is filled with a function that does the same as a board key (for a selection made from outside the board).
  */
-export function useHideOnScroll(ref: RefObject<HTMLElement | null>): boolean {
+export function useHideOnScroll(ref: RefObject<HTMLElement | null>, hideRef?: RefObject<(() => void) | null>): boolean {
   const [hidden, setHidden] = useState(false)
 
   useEffect(() => {
@@ -38,12 +39,17 @@ export function useHideOnScroll(ref: RefObject<HTMLElement | null>): boolean {
       if (!frame) frame = requestAnimationFrame(update)
     }
 
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return
+    function keepHidden() {
       keyboard = true
       // Hides right away: a selection that doesn't scroll could be under the bar.
       onScroll()
     }
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return
+      keepHidden()
+    }
+    if (hideRef) hideRef.current = keepHidden
 
     function onPointer() {
       keyboard = false
@@ -59,8 +65,9 @@ export function useHideOnScroll(ref: RefObject<HTMLElement | null>): boolean {
       window.removeEventListener('wheel', onPointer)
       window.removeEventListener('pointerdown', onPointer)
       cancelAnimationFrame(frame)
+      if (hideRef) hideRef.current = null
     }
-  }, [ref])
+  }, [ref, hideRef])
 
   return hidden
 }

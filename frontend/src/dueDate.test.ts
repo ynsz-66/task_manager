@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dueLabel, dueStatus, fillDays, fromLocalInput, localDay, toLocalInput } from './dueDate'
+import { dueLabel, dueStatus, fillDays, fillWeeks, fromLocalInput, localDay, toLocalInput, weekSpan } from './dueDate'
 
 // Local times (no offset), so the tests pass in any timezone.
 const now = new Date(2026, 10, 20, 12, 0)
@@ -43,5 +43,30 @@ describe('fillDays', () => {
     expect(days[0].key).toBe('2026-10-22')
     expect(days[29]).toMatchObject({ key: '2026-11-20', count: 3 })
     expect(days.reduce((sum, d) => sum + d.count, 0)).toBe(3)
+  })
+})
+
+describe('fillWeeks', () => {
+  // Friday 20 Nov 2026: this week starts on Monday 16.
+  const friday = new Date(2026, 10, 20, 8)
+
+  it('sums the days into Monday-based weeks, oldest first, 0 when empty', () => {
+    const perDay = [
+      { date: '2026-11-16', count: 1 }, // Monday: this week
+      { date: '2026-11-20', count: 2 }, // today
+      { date: '2026-11-15', count: 4 }, // Sunday: last week
+      { date: '2026-08-01', count: 9 }, // too old
+    ]
+    const weeks = fillWeeks(perDay, 12, friday)
+    expect(weeks).toHaveLength(12)
+    expect(weeks[11]).toMatchObject({ key: '2026-11-16', count: 3 })
+    expect(weeks[10]).toMatchObject({ key: '2026-11-09', count: 4 })
+    expect(weeks[0].key).toBe('2026-08-31')
+    expect(weeks.reduce((sum, w) => sum + w.count, 0)).toBe(7)
+  })
+
+  it('requests enough days to cover the oldest Monday', () => {
+    expect(weekSpan(12, friday)).toBe(82) // 11 full weeks + Monday to Friday
+    expect(weekSpan(1, new Date(2026, 10, 16, 8))).toBe(1)
   })
 })

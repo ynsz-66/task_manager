@@ -15,7 +15,7 @@ const SHORTCUTS: [keys: string[], action: string][] = [
   [['H', 'L'], 'Move to the previous / next column'],
   [['>', '<'], 'Nest under the task above / take out one level'],
   [['c'], 'New category'],
-  [['s'], 'Stats'],
+  [['s'], 'Dashboard'],
   [['⌘K'], 'Command palette (Ctrl+K)'],
   [['Esc'], 'Clear the selection'],
 ]

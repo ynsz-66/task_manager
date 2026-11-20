@@ -18,7 +18,7 @@ export function TaskGap({ gap }: { gap: Gap }) {
 }
 
 /** Due date under the title: red once overdue, orange within 24 h, muted when done. Status in words too, not color alone. */
-function DueBadge({ iso, done }: { iso: string; done: boolean }) {
+export function DueBadge({ iso, done }: { iso: string; done: boolean }) {
   // shortcut: computed at render, so the color changes on the next render, not exactly at the due time.
   const status = done ? 'later' : dueStatus(iso)
   const label = dueLabel(iso)

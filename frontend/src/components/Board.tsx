@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
 import {
   closestCenter,
   DndContext,
@@ -60,9 +60,11 @@ interface BoardProps {
   onRequestStats: () => void
   onRequestNewCategory: () => void
   onToggleTheme: () => void
+  /** Filled with selectTask, so a task picked outside the board (dashboard) gets selected and scrolled to. */
+  selectRef?: RefObject<((id: string) => void) | null>
 }
 
-export function Board({ board, onRequestDeleteCategory, onRequestClearDone, onRequestClearCategory, onRequestHelp, onRequestStats, onRequestNewCategory, onToggleTheme }: BoardProps) {
+export function Board({ board, onRequestDeleteCategory, onRequestClearDone, onRequestClearCategory, onRequestHelp, onRequestStats, onRequestNewCategory, onToggleTheme, selectRef }: BoardProps) {
   const { tasks, categories, freshId, editingId, leavingId } = board
   const [draggedId, setDraggedId] = useState<string | null>(null)
   // Column or task whose add-task field is open (ids are unique across both).
@@ -127,6 +129,9 @@ export function Board({ board, onRequestDeleteCategory, onRequestClearDone, onRe
   ]
 
   const { selection, follow, selectTask, selectColumn, releaseTask } = useKeyboardNav(navColumns(columns, sorted, leavingId), runCommand)
+  useEffect(() => {
+    if (selectRef) selectRef.current = selectTask
+  })
 
   /** A key from useKeyboardNav, on the selected task or column. */
   function runCommand(command: Command, selected: Selection | null) {
@@ -200,7 +205,7 @@ export function Board({ board, onRequestDeleteCategory, onRequestClearDone, onRe
     items.push(
       { id: 'new-category', label: 'New category', keys: 'c', run: onRequestNewCategory },
       { id: 'theme', label: 'Toggle the theme', run: onToggleTheme },
-      { id: 'stats', label: 'Stats', keys: 's', run: onRequestStats },
+      { id: 'stats', label: 'Dashboard', keys: 's', run: onRequestStats },
       { id: 'help', label: 'Keyboard shortcuts', keys: '?', run: onRequestHelp },
       ...columns.map((c) => ({ id: `col-${c.id}`, label: 'Go to category', detail: c.name, run: () => selectColumn(c.id) })),
       ...sorted.map((t) => ({ id: `task-${t.id}`, label: 'Go to task', detail: t.title, run: () => selectTask(t.id) })),

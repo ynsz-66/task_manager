@@ -48,6 +48,35 @@ export function fillDays(perDay: { date: string; count: number }[], days: number
   })
 }
 
+/** Local noon of the Monday starting `date`'s week (noon: whole-day steps never skip a day across DST). */
+function mondayOf(date: Date) {
+  const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12)
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7))
+  return monday
+}
+
+/** Local days from the Monday `weeks - 1` weeks ago to today, included (the API needs one more: it counts back from now). */
+export function weekSpan(weeks: number, now = new Date()) {
+  return (weeks - 1) * 7 + ((now.getDay() + 6) % 7) + 1
+}
+
+/** The last `weeks` local weeks (Monday-based, this one last), summing `perDay` (`date` = YYYY-MM-DD) into each. */
+export function fillWeeks(perDay: { date: string; count: number }[], weeks: number, now = new Date()) {
+  const counts = new Map<string, number>()
+  for (const d of perDay) {
+    const [y, m, day] = d.date.split('-').map(Number)
+    const key = localDay(mondayOf(new Date(y, m - 1, day)))
+    counts.set(key, (counts.get(key) ?? 0) + d.count)
+  }
+  const current = mondayOf(now)
+  return Array.from({ length: weeks }, (_, i) => {
+    const date = new Date(current)
+    date.setDate(date.getDate() - (weeks - 1 - i) * 7)
+    const key = localDay(date)
+    return { key, date, count: counts.get(key) ?? 0 }
+  })
+}
+
 /** ISO date → `<input type="datetime-local">` value, in local time. */
 export function toLocalInput(iso: string) {
   const date = new Date(iso)
