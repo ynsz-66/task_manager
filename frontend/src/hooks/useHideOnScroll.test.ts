@@ -21,7 +21,8 @@ function renderWithHeader() {
 beforeEach(() => {
   vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
     callback(0)
-    return 1
+    // The frame already ran: no request left pending (a non-zero id would block the next scroll).
+    return 0
   })
   Object.defineProperty(window, 'innerHeight', { value: 800, configurable: true })
   Object.defineProperty(document.documentElement, 'scrollHeight', { value: 5000, configurable: true })
@@ -89,6 +90,53 @@ describe('useHideOnScroll', () => {
     const { result, unmount } = renderWithHeader()
     unmount()
     scrollTo(400)
+    expect(result.current).toBe(false)
+  })
+
+  it('after a board key, stays hidden while scrolling up, until the top of the page', () => {
+    const { result } = renderWithHeader()
+    scrollTo(600)
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k' }))
+    })
+    scrollTo(300)
+    expect(result.current).toBe(true)
+    scrollTo(HEADER_HEIGHT)
+    expect(result.current).toBe(false)
+  })
+
+  it('a board key hides a bar shown mid-page right away', () => {
+    const { result } = renderWithHeader()
+    scrollTo(600)
+    scrollTo(400)
+    expect(result.current).toBe(false)
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'j' }))
+    })
+    expect(result.current).toBe(true)
+  })
+
+  it('keys typed in a field or with a modifier change nothing', () => {
+    const { result } = renderWithHeader()
+    scrollTo(600)
+    scrollTo(400)
+    const input = document.body.appendChild(document.createElement('input'))
+    act(() => {
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'j', bubbles: true }))
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))
+    })
+    expect(result.current).toBe(false)
+    input.remove()
+  })
+
+  it('the wheel brings back the show-on-scroll-up behavior', () => {
+    const { result } = renderWithHeader()
+    scrollTo(600)
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'j' }))
+      window.dispatchEvent(new Event('wheel'))
+    })
+    scrollTo(300)
     expect(result.current).toBe(false)
   })
 })

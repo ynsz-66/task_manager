@@ -46,7 +46,8 @@ const MOTIONS = new Set<string>(['h', 'j', 'k', 'l', 'gg', 'G'])
 export const PREFIX_TIMEOUT_MS = 500
 
 /** A field where the keys are text. */
-function isTyping(target: EventTarget | null) {
+/** A key typed into a text field, not a board key. */
+export function isTyping(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false
   if (target.isContentEditable || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement) return true
   return target instanceof HTMLInputElement && !['checkbox', 'radio', 'button', 'submit'].includes(target.type)
@@ -55,6 +56,8 @@ function isTyping(target: EventTarget | null) {
 /** Vim-style keys on the whole page: motions move the selection, the other keys go to `onCommand`. */
 export function useKeyboardNav(columns: NavColumn[], onCommand: (command: Command, selection: Selection | null) => void) {
   const [stored, setStored] = useState<Selection | null>(null)
+  // False after a click: the clicked task is already in view, so its column must not scroll.
+  const [follow, setFollow] = useState(true)
   const selection = resolveSelection(columns, stored)
   const pending = useRef<{ key: string; at: number } | null>(null)
 
@@ -91,6 +94,7 @@ export function useKeyboardNav(columns: NavColumn[], onCommand: (command: Comman
       if (MOTIONS.has(key)) {
         e.preventDefault()
         setStored(nextSelection(columns, selection, key as NavKey))
+        setFollow(true)
         return
       }
       const command = COMMANDS[key]
@@ -104,10 +108,18 @@ export function useKeyboardNav(columns: NavColumn[], onCommand: (command: Comman
 
   return {
     selection,
-    /** Select a task by id (click). */
-    selectTask: (id: string) => setStored(resolveSelection(columns, { column: '', task: id, index: 0 })),
+    /** Whether the view follows the selection into its column (keys, palette), not after a click. */
+    follow,
+    /** Select a task by id: `follow` false for a click. */
+    selectTask: (id: string, follow = true) => {
+      setStored(resolveSelection(columns, { column: '', task: id, index: 0 }))
+      setFollow(follow)
+    },
     /** Select a column: its first task, or the column itself when empty. */
-    selectColumn: (id: string) => setStored({ column: id, task: null, index: 0 }),
+    selectColumn: (id: string) => {
+      setStored({ column: id, task: null, index: 0 })
+      setFollow(true)
+    },
     /** Keep the row but not the task: the selection goes to whatever task takes its place (checked task leaving). */
     releaseTask: () => setStored(selection && { ...selection, task: null }),
   }

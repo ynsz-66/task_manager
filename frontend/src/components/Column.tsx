@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 
 interface ColumnProps {
@@ -8,6 +8,10 @@ interface ColumnProps {
   movable: boolean
   /** Keyboard selection on the column itself (it has no task). */
   isSelected?: boolean
+  /** The keyboard selection is in this column (on it or on one of its tasks). */
+  holdsSelection?: boolean
+  /** The view follows the selection when it enters the column (false after a click). */
+  followSelection?: boolean
   /** Index of the drop slot in the gap before the column (none for Done). */
   slot?: number
   /** The slot would leave the dragged column where it is: kept droppable, but not shown. */
@@ -17,7 +21,7 @@ interface ColumnProps {
   children: ReactNode
 }
 
-export function Column({ id, isDone, movable, isSelected, slot, slotIdle, header, style, children }: ColumnProps) {
+export function Column({ id, isDone, movable, isSelected, holdsSelection, followSelection, slot, slotIdle, header, style, children }: ColumnProps) {
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id })
   const {
     setNodeRef: setDragRef,
@@ -31,6 +35,18 @@ export function Column({ id, isDone, movable, isSelected, slot, slotIdle, header
       document.activeElement.blur()
     }
   }, [isSelected])
+  // Entering a column: its header comes into view, then the selected task (stacked columns in portrait).
+  // Only on entering: a key after a click (followSelection turning true) in the same column must not scroll.
+  const ref = useRef<HTMLElement | null>(null)
+  const held = useRef(false)
+  useEffect(() => {
+    const entered = !!holdsSelection && !held.current
+    held.current = !!holdsSelection
+    const node = ref.current
+    if (!entered || !followSelection || !node) return
+    node.querySelector('.col-head')?.scrollIntoView?.({ block: 'nearest' })
+    ;(node.querySelector('.task.selected') ?? node).scrollIntoView?.({ block: 'nearest' })
+  }, [holdsSelection, followSelection])
   const className = ['col', isDone && 'col-done', movable && 'movable', isOver && 'over', isDragging && 'dragging', isSelected && 'selected']
     .filter(Boolean)
     .join(' ')
@@ -40,6 +56,7 @@ export function Column({ id, isDone, movable, isSelected, slot, slotIdle, header
       ref={(node) => {
         setDropRef(node)
         setDragRef(node)
+        ref.current = node
       }}
       className={className}
       style={style}

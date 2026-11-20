@@ -126,7 +126,7 @@ export function Board({ board, onRequestDeleteCategory, onRequestClearDone, onRe
     { id: DONE_COLUMN_ID, name: 'Done', isDone: true, movable: false, tasks: sorted.filter((t) => isRoot(t) && t.done) },
   ]
 
-  const { selection, selectTask, selectColumn, releaseTask } = useKeyboardNav(navColumns(columns, sorted, leavingId), runCommand)
+  const { selection, follow, selectTask, selectColumn, releaseTask } = useKeyboardNav(navColumns(columns, sorted, leavingId), runCommand)
 
   /** A key from useKeyboardNav, on the selected task or column. */
   function runCommand(command: Command, selected: Selection | null) {
@@ -229,7 +229,7 @@ export function Board({ board, onRequestDeleteCategory, onRequestClearDone, onRe
         isLeaving={task.id === leavingId}
         isAdding={task.id === addingIn}
         isSelected={task.id === selection?.task}
-        onSelect={() => selectTask(task.id)}
+        onSelect={() => selectTask(task.id, false)}
         onChange={(changes) => board.changeTask(task.id, changes)}
         onDelete={() => board.deleteTask(task.id)}
         onStartEdit={() => board.setEditingId(task.id)}
@@ -268,6 +268,8 @@ export function Board({ board, onRequestDeleteCategory, onRequestClearDone, onRe
             isDone={column.isDone}
             movable={column.movable}
             isSelected={selection?.column === column.id && !selection.task}
+            holdsSelection={selection?.column === column.id}
+            followSelection={follow}
             slot={column.isDone ? undefined : index}
             slotIdle={draggedIndex !== -1 && (index === draggedIndex || index === draggedIndex + 1)}
             // --i: column rank, for the cascading entrance.

@@ -155,6 +155,33 @@ describe('Board keyboard: motions', () => {
     expect(selectedTitle()).toBeNull()
   })
 
+  it('entering a column scrolls its header into view, then the selected task; a click does not', () => {
+    const scrolled: Element[] = []
+    const original = Element.prototype.scrollIntoView
+    Element.prototype.scrollIntoView = function (this: Element) {
+      scrolled.push(this)
+    }
+    try {
+      renderBoard()
+      press('j')
+      scrolled.length = 0
+      press('l')
+      const columnB = row('three').closest('.col') as HTMLElement
+      expect(scrolled.slice(-2)).toEqual([columnB.querySelector('.col-head'), row('three')])
+      // An empty column: its header, then the column itself.
+      press('l')
+      const columnC = screen.getByRole('heading', { name: 'C' }).closest('.col') as HTMLElement
+      expect(scrolled.slice(-2)).toEqual([columnC.querySelector('.col-head'), columnC])
+      scrolled.length = 0
+      fireEvent.click(screen.getByText('one'))
+      // A key right after the click stays in the column: no jump to its header.
+      press('j')
+      expect(scrolled.some((el) => el.classList.contains('col-head'))).toBe(false)
+    } finally {
+      Element.prototype.scrollIntoView = original
+    }
+  })
+
   it('selects a clicked task, a subtask without its parent', () => {
     renderBoard()
     fireEvent.click(screen.getByText('sub two'))
