@@ -83,6 +83,26 @@ describe('useKeyboardNav', () => {
     expect(onCommand.mock.calls.map(([command]) => command)).toEqual(['palette', 'palette'])
   })
 
+  it('ignores Alt combos and keys typed in a textarea', () => {
+    const { result, onCommand } = renderNav()
+    press('j', document.body, { altKey: true })
+    const textarea = document.body.appendChild(document.createElement('textarea'))
+    press('j', textarea)
+    press('x', textarea)
+    expect(result.current.selection).toBeNull()
+    expect(onCommand).not.toHaveBeenCalled()
+  })
+
+  it('does not read g j g as gg', () => {
+    const { result } = renderNav()
+    press('j')
+    press('G')
+    press('g')
+    press('k')
+    press('g')
+    expect(result.current.selection?.task).toBe('t2')
+  })
+
   it('lets Enter activate a focused button', () => {
     const { onCommand } = renderNav()
     const button = document.body.appendChild(document.createElement('button'))

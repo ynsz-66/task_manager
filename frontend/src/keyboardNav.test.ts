@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Task } from './types'
-import { navColumns, nextSelection, outdentGap, resolveSelection, shiftGap, type NavColumn } from './keyboardNav'
+import { navColumns, nextSelection, outdentGap, resolveSelection, shiftGap, siblingsOf, type NavColumn } from './keyboardNav'
 
 const task = (id: string, category: string, position: number, parent: string | null = null, done = false): Task => ({
   id,
@@ -89,6 +89,18 @@ describe('move gaps', () => {
     expect(shiftGap(sorted[0], sorted, 1)).toEqual({ parent: null, category: 'a', before: null })
     expect(shiftGap(s1, sorted, -1)).toBeNull()
     expect(shiftGap(s2, sorted, 1)).toBeNull()
+  })
+
+  it('counts a task whose parent is gone as a root, and keeps done roots apart', () => {
+    const list = [task('r1', 'a', 0), task('orphan', 'a', 1, 'gone'), task('r2', 'a', 2, null, true)]
+    expect(siblingsOf(list[1], list).map((t) => t.id)).toEqual(['r1', 'orphan'])
+    expect(shiftGap(list[1], list, -1)).toEqual({ parent: null, category: 'a', before: 'r1' })
+    expect(siblingsOf(list[2], list).map((t) => t.id)).toEqual(['r2'])
+  })
+
+  it('outdents a second-level subtask under its grandparent, right after its parent', () => {
+    const deep = [...sorted, task('g1', 'a', 0, 's1')].toSorted((a, b) => a.position - b.position)
+    expect(outdentGap(deep.find((t) => t.id === 'g1')!, deep)).toEqual({ parent: 't1', category: 'a', before: 's2' })
   })
 
   it('outdents a subtask right after its parent, not a root task', () => {
