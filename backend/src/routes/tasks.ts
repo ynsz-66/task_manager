@@ -10,6 +10,15 @@ async function categoryExists(value: unknown) {
   return mongoose.isValidObjectId(value) && (await CategoryModel.exists({ _id: value })) !== null
 }
 
+// ISO 8601 date and time with an explicit timezone (Z or ±HH:MM): without one, "09:00" would be read in the server's timezone.
+const ISO_WITH_TZ = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/
+const DUE_DATE_ERROR = 'dueDate must be an ISO 8601 date with a timezone (e.g. 2026-11-21T09:00:00+01:00) or null'
+
+// undefined = not sent, null = no due date.
+function isValidDueDate(value: unknown) {
+  return value === undefined || value === null || (typeof value === 'string' && ISO_WITH_TZ.test(value) && !Number.isNaN(Date.parse(value)))
+}
+
 // get task
 tasksRouter.get('/', async (_req, res) => {
   try {
@@ -23,7 +32,7 @@ tasksRouter.get('/', async (_req, res) => {
 
 // create task
 tasksRouter.post('/', async (req, res) => {
-  const { title, category, parent } = req.body ?? {}
+  const { title, category, parent, dueDate } = req.body ?? {}
 
   if (typeof title !== 'string' || title.trim() === '') {
     res.status(400).json({ error: 'title is required' })
@@ -31,6 +40,10 @@ tasksRouter.post('/', async (req, res) => {
   }
   if (parent !== undefined && parent !== null && !mongoose.isValidObjectId(parent)) {
     res.status(400).json({ error: 'invalid parent' })
+    return
+  }
+  if (!isValidDueDate(dueDate)) {
+    res.status(400).json({ error: DUE_DATE_ERROR })
     return
   }
 
@@ -43,7 +56,7 @@ tasksRouter.post('/', async (req, res) => {
         return
       }
       const fields = { category: parentTask.category, parent: parentTask._id }
-      const task = await TaskModel.create({ title, ...fields, position: await firstPosition(fields) })
+      const task = await TaskModel.create({ title, dueDate, ...fields, position: await firstPosition(fields) })
       res.status(200).json(task)
       return
     }
@@ -57,7 +70,7 @@ tasksRouter.post('/', async (req, res) => {
       return
     }
     const categoryId = category ?? fallback?._id
-    const task = await TaskModel.create({ title, category: categoryId, position: await firstPosition({ category: categoryId }) })
+    const task = await TaskModel.create({ title, dueDate, category: categoryId, position: await firstPosition({ category: categoryId }) })
     res.status(200).json(task)
   } catch (err) {
     console.error(err)
@@ -68,14 +81,14 @@ tasksRouter.post('/', async (req, res) => {
 // update task
 tasksRouter.patch('/:id', async (req, res) => {
   const { id } = req.params
-  const { title, category, done, parent, position } = req.body ?? {}
+  const { title, category, done, parent, position, dueDate } = req.body ?? {}
 
   if (!mongoose.isValidObjectId(id)) {
     res.status(400).json({ error: 'invalid id' })
     return
   }
-  if (title === undefined && category === undefined && done === undefined && parent === undefined && position === undefined) {
-    res.status(400).json({ error: 'nothing to update (title, category, done, parent or position)' })
+  if ([title, category, done, parent, position, dueDate].every((field) => field === undefined)) {
+    res.status(400).json({ error: 'nothing to update (title, category, done, parent, position or dueDate)' })
     return
   }
   if (position !== undefined && !(Number.isInteger(position) && position >= 0)) {
@@ -94,6 +107,10 @@ tasksRouter.patch('/:id', async (req, res) => {
   }
   if (done !== undefined && typeof done !== 'boolean') {
     res.status(400).json({ error: 'done must be a boolean' })
+    return
+  }
+  if (!isValidDueDate(dueDate)) {
+    res.status(400).json({ error: DUE_DATE_ERROR })
     return
   }
 
@@ -126,7 +143,16 @@ tasksRouter.patch('/:id', async (req, res) => {
       // Like POST: the task takes its parent's category, and is checked if the parent is.
       changes = { title, category: parentTask.category, done: parentTask.done || done, parent: parentTask._id }
     }
-    const task = await TaskModel.findByIdAndUpdate(id, changes, { returnDocument: 'after' })
+    const now = new Date()
+    const update = {
+      ...changes,
+      // A new due date gets its own reminder.
+      ...(dueDate !== undefined && { dueDate, notifiedAt: null }),
+      // doneAt is when the task got checked: kept if it already was, cleared when unchecked.
+      ...(changes.done === true && !current.done && { doneAt: now }),
+      ...(changes.done === false && { doneAt: null }),
+    }
+    const task = await TaskModel.findByIdAndUpdate(id, update, { returnDocument: 'after' })
     if (!task) {
       res.status(404).json({ error: 'task not found' })
       return
@@ -134,7 +160,10 @@ tasksRouter.patch('/:id', async (req, res) => {
     // Subtasks follow their parent's category, and are checked with it (unchecking leaves them as they are).
     const cascade = { ...(changes.category !== undefined && { category: task.category }), ...(changes.done === true && { done: true }) }
     if (Object.keys(cascade).length > 0) {
-      await TaskModel.updateMany({ _id: { $in: await subtreeIds({ _id: task._id }) } }, cascade)
+      const ids = await subtreeIds({ _id: task._id })
+      await TaskModel.updateMany({ _id: { $in: ids } }, cascade)
+      // Subtasks checked just now get doneAt; those checked earlier keep theirs.
+      if (cascade.done) await TaskModel.updateMany({ _id: { $in: ids }, doneAt: null }, { doneAt: now })
     }
     // A task that changes list (parent or category) goes to its end, unless a position is sent.
     const moved = String(task.parent) !== String(current.parent) || String(task.category) !== String(current.category)

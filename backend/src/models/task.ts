@@ -9,6 +9,12 @@ const taskSchema = new mongoose.Schema(
     parent: { type: mongoose.Schema.Types.ObjectId, ref: 'Task', default: null },
     // Index among its siblings (siblingsOf). Holes are fine (deletions), ties fall back to createdAt.
     position: { type: Number, default: 0 },
+    // Due date and time; the reminder fires once it is reached (reminders.ts).
+    dueDate: { type: Date, default: null },
+    // When the task was checked (stats); null while not done. Set by the API, never by the client.
+    doneAt: { type: Date, default: null },
+    // When the reminder for the current dueDate was sent; reset when dueDate changes.
+    notifiedAt: { type: Date, default: null },
   },
   {
     timestamps: true,
@@ -66,8 +72,17 @@ export async function placeTask(task: Placed, index?: number) {
   return at
 }
 
-/** Gives tasks created before subtasks existed an explicit `parent: null`. */
+/**
+ * Gives tasks created before subtasks existed an explicit `parent: null`, and tasks checked
+ * before `doneAt` existed `doneAt = updatedAt` (best guess for the stats).
+ */
 export async function setupTasks() {
   const result = await TaskModel.updateMany({ parent: { $exists: false } }, { $set: { parent: null } })
   if (result.modifiedCount > 0) console.log(`set parent: null on ${result.modifiedCount} task(s)`)
+  // Raw collection: an update pipeline, and no updatedAt bump from the timestamps plugin.
+  const done = await TaskModel.collection.updateMany(
+    { done: true, $or: [{ doneAt: null }, { doneAt: { $exists: false } }] },
+    [{ $set: { doneAt: '$updatedAt' } }],
+  )
+  if (done.modifiedCount > 0) console.log(`set doneAt on ${done.modifiedCount} done task(s)`)
 }

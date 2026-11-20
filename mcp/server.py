@@ -16,6 +16,8 @@ def update_task(
     done: bool | None = None,
     parent_id: str | None = None,
     position: int | None = None,
+    due_date: str | None = None,
+    clear_due_date: bool = False,
 ) -> dict[str, Any]:
     """
     Update a task in the database. Only the provided fields are modified.
@@ -27,8 +29,11 @@ def update_task(
     position reorders the task: its 0-based index among its siblings (same parent, and same category
     for a root task, done ones included), the others shift. A task moved to another parent or category
     without position goes last.
+    due_date sets the due date: ISO 8601 date and time with a timezone, e.g. 2026-11-21T09:00:00+01:00
+    (Europe/Paris in winter). A push notification is sent to the user's phone when it is reached
+    (once per due date: changing it re-arms the reminder). clear_due_date=True removes it.
     """
-    return client.update_task(task_id, title, category, done, parent_id, position)
+    return client.update_task(task_id, title, category, done, parent_id, position, due_date, clear_due_date)
 
 
 @mcp.tool()
@@ -41,14 +46,21 @@ def delete_task(task_id: str) -> str:
 
 
 @mcp.tool()
-def create_task(title: str, category: str = "Other", parent_id: str | None = None) -> dict[str, Any]:
+def create_task(
+    title: str,
+    category: str = "Other",
+    parent_id: str | None = None,
+    due_date: str | None = None,
+) -> dict[str, Any]:
     """
     Create a task in the database, first among its siblings (top of its list).
     With parent_id (the id of an existing task), creates a subtask of that task
     instead; it takes the parent's category and `category` is ignored.
     Subtasks can be nested at any depth.
+    due_date (optional) is an ISO 8601 date and time with a timezone, e.g. 2026-11-21T09:00:00+01:00:
+    a push notification is sent to the user's phone when it is reached ("remind me to X tomorrow at 9").
     """
-    return client.create_task(title, category, parent_id)
+    return client.create_task(title, category, parent_id, due_date)
 
 
 @mcp.tool()
@@ -61,6 +73,17 @@ def get_tasks() -> list[dict[str, Any]]:
     and same category for a root task).
     """
     return client.get_tasks()
+
+
+@mcp.tool()
+def get_stats(days: int = 30, tz: str = "Europe/Paris") -> dict[str, Any]:
+    """
+    Get task statistics: donePerDay ([{date: YYYY-MM-DD in tz, count}]) and doneByCategory
+    ([{category, count}]) for the tasks checked in the last `days` days (1 to 366), plus overdue
+    (not-done tasks past their due date) and dueSoon (not-done tasks due within 24 hours).
+    tz is an IANA timezone.
+    """
+    return client.get_stats(days, tz)
 
 
 @mcp.tool()

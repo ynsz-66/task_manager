@@ -49,9 +49,15 @@ def get_tasks() -> list[dict[str, Any]]:
     return response.json()
 
 
-def create_task(title: str, category: str = "Other", parent_id: str | None = None) -> dict[str, Any]:
+def create_task(
+    title: str,
+    category: str = "Other",
+    parent_id: str | None = None,
+    due_date: str | None = None,
+) -> dict[str, Any]:
+    due = {"dueDate": due_date} if due_date is not None else {}
     if parent_id is not None:
-        response = http.post("/tasks", json={"title": title, "parent": parent_id})
+        response = http.post("/tasks", json={"title": title, "parent": parent_id, **due})
         raise_for_api_error(response)
         return response.json()
     res = http.get("/categories")
@@ -60,7 +66,7 @@ def create_task(title: str, category: str = "Other", parent_id: str | None = Non
     id = next((c["id"] for c in categories if c["name"] == category), None)
     if id is None:
         raise ValueError(f"Category '{category}' not found.")
-    response = http.post("/tasks", json={"title": title, "category": id})
+    response = http.post("/tasks", json={"title": title, "category": id, **due})
     raise_for_api_error(response)
     return response.json()
 
@@ -72,6 +78,8 @@ def update_task(
     done: bool | None = None,
     parent_id: str | None = None,
     position: int | None = None,
+    due_date: str | None = None,
+    clear_due_date: bool = False,
 ) -> dict[str, Any]:
     category_id = None
     # Under a parent, the backend ignores the category.
@@ -84,7 +92,18 @@ def update_task(
             raise ValueError(f"Category '{category}' not found.")
     fields = {"title": title, "category": category_id, "done": done, "parent": parent_id, "position": position}
     body = {key: value for key, value in fields.items() if value is not None}
+    # None means "not sent" here, so removing the due date needs its own flag.
+    if clear_due_date:
+        body["dueDate"] = None
+    elif due_date is not None:
+        body["dueDate"] = due_date
     response = http.patch(f"/tasks/{task_id}", json=body)
+    raise_for_api_error(response)
+    return response.json()
+
+
+def get_stats(days: int = 30, tz: str = "Europe/Paris") -> dict[str, Any]:
+    response = http.get("/stats", params={"days": days, "tz": tz})
     raise_for_api_error(response)
     return response.json()
 
