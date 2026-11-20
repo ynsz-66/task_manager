@@ -14,7 +14,7 @@ scripts:
         pm.expect(stats.dueSoon).to.be.a('number')
       })
       pm.test('the subtask checked today is counted', () => {
-        const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(new Date())
-        pm.expect(stats.donePerDay.find((d) => d.date === today).count).to.be.at.least(1)
+        const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' })
+        pm.expect(stats.donePerDay.find((d) => d.date === today)?.count).to.be.at.least(1)
         pm.expect(stats.doneByCategory.find((c) => c.category === pm.collectionVariables.get('tempCategoryName'))).to.be.an('object')
       })
