@@ -60,6 +60,7 @@ function renderBoard(tasks = initialTasks) {
     onRequestClearDone: vi.fn(),
     onRequestClearCategory: vi.fn(),
     onRequestHelp: vi.fn(),
+    onRequestStats: vi.fn(),
     onRequestNewCategory: vi.fn(),
     onToggleTheme: vi.fn(),
   }
@@ -263,11 +264,12 @@ describe('Board keyboard: commands', () => {
     expect(screen.queryByLabelText('Rename the Other category')).toBeNull()
   })
 
-  it('c and ? ask App for the category field and the help', () => {
+  it('c, ? and s ask App for the category field, the help and the stats', () => {
     const { callbacks } = renderBoard()
-    press('c', '?')
+    press('c', '?', 's')
     expect(callbacks.onRequestNewCategory).toHaveBeenCalledTimes(1)
     expect(callbacks.onRequestHelp).toHaveBeenCalledTimes(1)
+    expect(callbacks.onRequestStats).toHaveBeenCalledTimes(1)
   })
 })
 

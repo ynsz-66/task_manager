@@ -16,6 +16,7 @@ export type Command =
   | 'indent'
   | 'outdent'
   | 'help'
+  | 'stats'
   | 'newCategory'
   | 'palette'
 
@@ -37,6 +38,7 @@ const COMMANDS: Record<string, Command> = {
   '>': 'indent',
   '<': 'outdent',
   '?': 'help',
+  s: 'stats',
   c: 'newCategory',
 }
 const MOTIONS = new Set<string>(['h', 'j', 'k', 'l', 'gg', 'G'])

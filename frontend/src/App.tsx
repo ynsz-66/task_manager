@@ -9,6 +9,7 @@ import { Board } from './components/Board'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { Modal } from './components/Modal'
 import { ShortcutsHelp } from './components/ShortcutsHelp'
+import { StatsDialog } from './components/StatsDialog'
 import { UndoToast } from './components/UndoToast'
 import './App.css'
 
@@ -20,6 +21,7 @@ function App() {
   const [confirmClearDone, setConfirmClearDone] = useState(false)
   const [categoryToClear, setCategoryToClear] = useState<Category | null>(null)
   const [showHelp, setShowHelp] = useState(false)
+  const [showStats, setShowStats] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
   const categoryInputRef = useRef<HTMLInputElement>(null)
   const headerHidden = useHideOnScroll(headerRef)
@@ -43,6 +45,9 @@ function App() {
         <div className="top-row">
           <h1>Tasks</h1>
           <div className="prefs">
+            <button type="button" className="ghost" onClick={() => setShowStats(true)}>
+              Stats
+            </button>
             <button type="button" className="ghost" onClick={() => setShowHelp(true)} aria-label="Keyboard shortcuts">
               ?
             </button>
@@ -60,6 +65,7 @@ function App() {
         onRequestClearDone={() => setConfirmClearDone(true)}
         onRequestClearCategory={(id) => setCategoryToClear(categories.find((c) => c.id === id) ?? null)}
         onRequestHelp={() => setShowHelp(true)}
+        onRequestStats={() => setShowStats(true)}
         // The header reveals itself while its field has the focus (.top:focus-within).
         onRequestNewCategory={() => categoryInputRef.current?.focus()}
         onToggleTheme={toggleTheme}
@@ -88,6 +94,8 @@ function App() {
       )}
 
       {showHelp && <ShortcutsHelp onClose={() => setShowHelp(false)} />}
+
+      {showStats && <StatsDialog onClose={() => setShowStats(false)} />}
 
       {error && (
         <Modal key={error} title="Oops" onClose={board.clearError}>

@@ -4,6 +4,7 @@ import type { Category, Task } from '../types'
 import type { Gap } from '../hooks/useBoard'
 import type { TaskChanges } from '../services/taskStorage'
 import { EditForm } from './EditForm'
+import { dueLabel, dueStatus } from '../dueDate'
 
 function categoryNameOf(categories: Category[], categoryId: string) {
   return categories.find((c) => c.id === categoryId)?.name ?? ''
@@ -14,6 +15,18 @@ export function TaskGap({ gap }: { gap: Gap }) {
   const id = `gap-${gap.parent ?? gap.category}-${gap.before ?? 'end'}`
   const { setNodeRef, isOver } = useDroppable({ id, data: { type: 'gap', gap } })
   return <li ref={setNodeRef} className={isOver ? 'gap over' : 'gap'} aria-hidden="true" />
+}
+
+/** Due date under the title: red once overdue, orange within 24 h, muted when done. Status in words too, not color alone. */
+function DueBadge({ iso, done }: { iso: string; done: boolean }) {
+  // shortcut: computed at render, so the color changes on the next render, not exactly at the due time.
+  const status = done ? 'later' : dueStatus(iso)
+  const label = dueLabel(iso)
+  return (
+    <time dateTime={iso} className={`due ${status}`}>
+      {status === 'overdue' ? `Overdue · ${label}` : label}
+    </time>
+  )
 }
 
 interface TaskItemProps {
@@ -73,7 +86,7 @@ export function TaskItem({ task, categories, showCategory, isFresh, isEditing, i
       }}
     >
       {isEditing ? (
-        <EditForm task={task} onSave={(title) => onChange({ title })} onCancel={onCancelEdit} />
+        <EditForm task={task} onSave={onChange} onCancel={onCancelEdit} />
       ) : (
         <>
           <input
@@ -85,6 +98,7 @@ export function TaskItem({ task, categories, showCategory, isFresh, isEditing, i
           />
           <div className="body">
             <span className="title" onDoubleClick={onStartEdit}>{task.title}</span>
+            {task.dueDate && <DueBadge iso={task.dueDate} done={task.done} />}
             {showCategory && <span className="tag">{categoryName}</span>}
           </div>
           <div className="actions">

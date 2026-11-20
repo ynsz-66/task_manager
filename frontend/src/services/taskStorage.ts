@@ -1,4 +1,4 @@
-import type { Category, Task } from '../types'
+import type { Category, Stats, Task } from '../types'
 import { api } from './api'
 
 /**
@@ -9,7 +9,7 @@ import { api } from './api'
  * `parent`: null detaches a subtask, a task id moves the task under it (it takes that task's category).
  * `position`: index among the task's siblings; the backend shifts the others.
  */
-export type TaskChanges = Partial<Pick<Task, 'title' | 'category' | 'done' | 'parent' | 'position'>>
+export type TaskChanges = Partial<Pick<Task, 'title' | 'category' | 'done' | 'parent' | 'position' | 'dueDate'>>
 
 export interface TaskStorage {
   /** Sorted by position (then creation date). */
@@ -28,6 +28,8 @@ export interface TaskStorage {
   clearDone(): Promise<number>
   /** Deletes the category's not-done root tasks and their subtasks; returns the number deleted. */
   clearCategory(id: string): Promise<number>
+  /** Last `days` days, days counted in the IANA timezone `tz`. */
+  getStats(days: number, tz: string): Promise<Stats>
 }
 
 export const apiTaskStorage: TaskStorage = {
@@ -68,6 +70,10 @@ export const apiTaskStorage: TaskStorage = {
   async clearCategory(id) {
     const response = await api.delete<{ deletedCount: number }>(`/categories/${id}/tasks`)
     return response.data.deletedCount
+  },
+  async getStats(days, tz) {
+    const response = await api.get<Stats>('/stats', { params: { days, tz } })
+    return response.data
   },
 }
 

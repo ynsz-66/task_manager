@@ -17,6 +17,11 @@ describe('apiTaskStorage', () => {
     expect(api.get).toHaveBeenCalledWith('/tasks')
   })
 
+  it('getStats sends days and tz as query params', async () => {
+    expect(await apiTaskStorage.getStats(30, 'Europe/Paris')).toBe(data)
+    expect(api.get).toHaveBeenCalledWith('/stats', { params: { days: 30, tz: 'Europe/Paris' } })
+  })
+
   it('getCategories', async () => {
     expect(await apiTaskStorage.getCategories()).toBe(data)
     expect(api.get).toHaveBeenCalledWith('/categories')

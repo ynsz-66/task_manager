@@ -57,11 +57,12 @@ interface BoardProps {
   onRequestClearDone: () => void
   onRequestClearCategory: (id: string) => void
   onRequestHelp: () => void
+  onRequestStats: () => void
   onRequestNewCategory: () => void
   onToggleTheme: () => void
 }
 
-export function Board({ board, onRequestDeleteCategory, onRequestClearDone, onRequestClearCategory, onRequestHelp, onRequestNewCategory, onToggleTheme }: BoardProps) {
+export function Board({ board, onRequestDeleteCategory, onRequestClearDone, onRequestClearCategory, onRequestHelp, onRequestStats, onRequestNewCategory, onToggleTheme }: BoardProps) {
   const { tasks, categories, freshId, editingId, leavingId } = board
   const [draggedId, setDraggedId] = useState<string | null>(null)
   // Column or task whose add-task field is open (ids are unique across both).
@@ -132,6 +133,7 @@ export function Board({ board, onRequestDeleteCategory, onRequestClearDone, onRe
     const column = columns.find((c) => c.id === selected?.column)
     const task = tasks.find((t) => t.id === selected?.task)
     if (command === 'help') return onRequestHelp()
+    if (command === 'stats') return onRequestStats()
     if (command === 'palette') return setPaletteOpen(true)
     if (command === 'newCategory') return onRequestNewCategory()
     if (command === 'undo') return board.undoDelete()
@@ -198,6 +200,7 @@ export function Board({ board, onRequestDeleteCategory, onRequestClearDone, onRe
     items.push(
       { id: 'new-category', label: 'New category', keys: 'c', run: onRequestNewCategory },
       { id: 'theme', label: 'Toggle the theme', run: onToggleTheme },
+      { id: 'stats', label: 'Stats', keys: 's', run: onRequestStats },
       { id: 'help', label: 'Keyboard shortcuts', keys: '?', run: onRequestHelp },
       ...columns.map((c) => ({ id: `col-${c.id}`, label: 'Go to category', detail: c.name, run: () => selectColumn(c.id) })),
       ...sorted.map((t) => ({ id: `task-${t.id}`, label: 'Go to task', detail: t.title, run: () => selectTask(t.id) })),
